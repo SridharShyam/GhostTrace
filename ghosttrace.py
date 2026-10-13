@@ -331,6 +331,35 @@ def get_suggestions(hits):
             suggestions.append((word, REPLACEMENTS[word]))
     return suggestions
 
+def humanize_text(text, hits):
+    """Apply top recommended human replacements and generate a diff."""
+    import difflib
+    cleaned = text
+    # Replace matched vocabulary with top human alternative
+    for item in hits.get('vocab', []):
+        word = item[0]
+        if word in REPLACEMENTS and REPLACEMENTS[word]:
+            replacement = REPLACEMENTS[word][0]
+            # Case-preserving replacement
+            pattern = re.compile(rf"\b({re.escape(word)})\b", re.I)
+            def _sub(m):
+                matched = m.group(1)
+                if matched.isupper():
+                    return replacement.upper()
+                elif matched[0].isupper():
+                    return replacement.capitalize()
+                return replacement
+            cleaned = pattern.sub(_sub, cleaned)
+            
+    diff_lines = list(difflib.unified_diff(
+        text.splitlines(keepends=True),
+        cleaned.splitlines(keepends=True),
+        fromfile='Original (AI Flagged)',
+        tofile='GhostTrace Humanized',
+        n=2
+    ))
+    return cleaned, ''.join(diff_lines)
+
 # ── 6. Visual Heatmap Generator (HTML Report) ────────────────────────────────
 
 def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
@@ -548,6 +577,8 @@ Modes:
 
 Options:
   --suggest           Display one-click human synonym recommendations
+  --diff              Display unified diff showing humanized replacements
+  --clean=<path>      Export humanized text to a file
   --report            Generate interactive visual heatmap HTML report (report.html)
   --output=<path>     Specify output path for the HTML report (default: report.html)
   --json              Output raw audit results, burstiness metrics, and suggestions in JSON
@@ -562,6 +593,15 @@ Options:
         if a.startswith('--mode='):
             mode = a.split('=', 1)[1]
     args = [a for a in args if not a.startswith('--mode=')]
+
+    clean_export_path = None
+    for a in args:
+        if a.startswith('--clean='):
+            clean_export_path = a.split('=', 1)[1]
+    args = [a for a in args if not a.startswith('--clean=')]
+
+    show_diff = '--diff' in args
+    args = [a for a in args if a != '--diff']
 
     report_output_path = "report.html"
     for a in args:
@@ -643,6 +683,20 @@ Options:
 
     print(f'GhostTrace [{mode.upper()} MODE]: {len(parsed_text.split())} words of visible copy\n')
     score = report(hits, burst, allow_proof=allow_proof, suggest=suggest)
+
+    cleaned_text, diff_output = humanize_text(raw_text, hits)
+
+    if show_diff:
+        print('\n== Humanized Diff View:')
+        if diff_output:
+            print(diff_output)
+        else:
+            print('  (No direct vocabulary replacements applied)')
+
+    if clean_export_path:
+        with open(clean_export_path, 'w', encoding='utf-8') as f:
+            f.write(cleaned_text)
+        print(f'\n  Exported humanized draft: {clean_export_path}')
 
     if gen_report:
         report_file = generate_heatmap_html(raw_text, hits, burst, score, filename=report_output_path)

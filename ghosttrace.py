@@ -646,6 +646,7 @@ Options:
 
     if gen_report:
         report_file = generate_heatmap_html(raw_text, hits, burst, score, filename=report_output_path)
-        print(f'\n  Visual Heatmap generated: file:///{os.path.abspath(report_file).replace("\\\\", "/")}')
+        report_uri = os.path.abspath(report_file).replace('\\', '/')
+        print(f'\n  Visual Heatmap generated: file:///{report_uri}')
 
     sys.exit(0 if score == 5 else 1)

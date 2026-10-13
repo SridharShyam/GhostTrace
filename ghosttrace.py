@@ -506,14 +506,45 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
 
 # ── 7. Reporting & CLI ────────────────────────────────────────────────────────
 
-def report(hits, burst, label='', allow_proof=False, suggest=False):
+def calculate_score(hits, word_count=0, allow_proof=False):
+    """Calculates score based on both categorical violations and AI word density.
+
+    1. Base categorical penalty: -1 per triggered category.
+    2. Density penalty: If AI buzzwords constitute a high percentage of the copy:
+       - >= 10% density: -3 penalty
+       - >= 5% density:  -2 penalty
+       - >= 2.5% density: -1 penalty
+    """
     weights = {'vocab': 1, 'phrases': 1, 'punctuation': 1, 'rhythm': 1, 'proof': 1, 'academic_hype': 1}
     if allow_proof:
         weights['proof'] = 0
 
     failed = [k for k, v in hits.items() if v]
-    score = 5 - sum(weights[k] for k in failed if k in weights)
-    score = max(0, score)
+    category_penalty = sum(weights[k] for k in failed if k in weights)
+
+    # Calculate total AI vocabulary occurrences
+    total_vocab_hits = sum(item[1] if isinstance(item, tuple) and len(item) > 1 else 1 for item in hits.get('vocab', []))
+    total_vocab_hits += sum(item[1] if isinstance(item, tuple) and len(item) > 1 else 1 for item in hits.get('academic_hype', []))
+
+    density_penalty = 0
+    if word_count > 0 and total_vocab_hits > 0:
+        density = (total_vocab_hits / word_count) * 100
+        if density >= 10.0:
+            density_penalty = 3
+        elif density >= 5.0:
+            density_penalty = 2
+        elif density >= 2.5:
+            density_penalty = 1
+
+    total_penalty = max(category_penalty, category_penalty + density_penalty)
+    # If any category triggered, score can never be 5.
+    if failed:
+        total_penalty = max(1, total_penalty)
+
+    return max(0, 5 - total_penalty), total_vocab_hits, density_penalty
+
+def report(hits, burst, word_count=0, label='', allow_proof=False, suggest=False):
+    score, total_vocab_hits, density_penalty = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
 
     titles = {
         'vocab': 'AI vocabulary tells',
@@ -550,6 +581,10 @@ def report(hits, burst, label='', allow_proof=False, suggest=False):
             print('\n  recommended human replacements:')
             for word, alts in suggestions[:8]:
                 print(f'    * "{word}" -> {", ".join(alts[:3])}')
+
+    if density_penalty > 0 and word_count > 0:
+        density = (total_vocab_hits / word_count) * 100
+        print(f'\n  [!] Heavy AI Buzzword Saturation: {density:.1f}% of words flagged (-{density_penalty} score penalty)')
 
     print(f'\n  score {score}/5', end='  ')
     print('CLEAN' if score == 5 else 'needs a cleanse')
@@ -661,19 +696,18 @@ Options:
     hits = audit(parsed_text, mode=mode)
     burst = analyze_burstiness(parsed_text)
 
+    word_count = len(parsed_text.split())
+
     if as_json:
         import json
-        weights = {'vocab': 1, 'phrases': 1, 'punctuation': 1, 'rhythm': 1, 'proof': 1, 'academic_hype': 1}
-        if allow_proof:
-            weights['proof'] = 0
-        failed = [k for k, v in hits.items() if v]
-        score = max(0, 5 - sum(weights[k] for k in failed if k in weights))
+        score, total_vocab, density_penalty = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
         
         output_data = {
             'mode': mode,
-            'word_count': len(parsed_text.split()),
+            'word_count': word_count,
             'score': score,
             'status': 'CLEAN' if score == 5 else 'NEEDS_CLEANSE',
+            'density_penalty': density_penalty,
             'burstiness': burst,
             'hits': hits,
             'suggestions': dict(get_suggestions(hits)),
@@ -681,8 +715,8 @@ Options:
         print(json.dumps(output_data, indent=2))
         sys.exit(0 if score == 5 else 1)
 
-    print(f'GhostTrace [{mode.upper()} MODE]: {len(parsed_text.split())} words of visible copy\n')
-    score = report(hits, burst, allow_proof=allow_proof, suggest=suggest)
+    print(f'GhostTrace [{mode.upper()} MODE]: {word_count} words of visible copy\n')
+    score = report(hits, burst, word_count=word_count, allow_proof=allow_proof, suggest=suggest)
 
     cleaned_text, diff_output = humanize_text(raw_text, hits)
 

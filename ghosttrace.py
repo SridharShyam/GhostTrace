@@ -117,11 +117,14 @@ BASE_PHRASES = [
     (r"\bhere'?s the thing\b|\blet'?s break (it|this) down\b|\bthe best part\b", "throat-clearing opener"),
     (r"\bready to get started\b|\blet'?s get started\b", "boilerplate CTA"),
     (r"\bthe (result|answer|catch|kicker|upshot)\?\s", "self-answering question"),
+    # AI transition padding tells
+    (r"\b(furthermore|moreover|in addition),?\s+(it is (worth noting|important to note|crucial to understand))\b", "stacked transition filler"),
+    (r"\bit is (worth noting|important to note|crucial to note) that\b", "throat-clearing note"),
 ]
 
 # Academic-specific boilerplate sentences inserted by LLMs
 ACADEMIC_PHRASES = [
-    (r"\bwith the (rapid|growing) (development|advancement|rise) of\b", "boilerplate paper opener"),
+    (r"\b(in recent years|with the (rapid|growing) (development|advancement|rise) of)\b", "boilerplate paper opener"),
     (r"\b(has|have) attracted (considerable|widespread|significant) attention\b", "cliche literature review hook"),
     (r"\bextensive experiments (have demonstrated|demonstrate|show)\b", "unspecified empirical claim"),
     (r"\bto the best of our knowledge, this is the first\b", "unverifiable novelty assertion"),
@@ -522,13 +525,19 @@ def calculate_score(hits, word_count=0, allow_proof=False):
     failed = [k for k, v in hits.items() if v]
     category_penalty = sum(weights[k] for k in failed if k in weights)
 
-    # Calculate total AI vocabulary occurrences
+    # Calculate total AI vocabulary and phrase occurrences
     total_vocab_hits = sum(item[1] if isinstance(item, tuple) and len(item) > 1 else 1 for item in hits.get('vocab', []))
     total_vocab_hits += sum(item[1] if isinstance(item, tuple) and len(item) > 1 else 1 for item in hits.get('academic_hype', []))
+    
+    total_phrase_hits = sum(item[1] if isinstance(item, tuple) and len(item) > 1 else 1 for item in hits.get('phrases', []))
+
+    # Multi-phrase penalty: If multiple distinct AI constructions are packed into one short text, dock points
+    phrase_penalty = max(0, total_phrase_hits - 1) if (word_count > 0 and word_count < 60) else 0
 
     density_penalty = 0
-    if word_count > 0 and total_vocab_hits > 0:
-        density = (total_vocab_hits / word_count) * 100
+    total_tells = total_vocab_hits + total_phrase_hits
+    if word_count > 0 and total_tells > 0:
+        density = (total_tells / word_count) * 100
         if density >= 10.0:
             density_penalty = 3
         elif density >= 5.0:
@@ -536,15 +545,15 @@ def calculate_score(hits, word_count=0, allow_proof=False):
         elif density >= 2.5:
             density_penalty = 1
 
-    total_penalty = max(category_penalty, category_penalty + density_penalty)
+    total_penalty = max(category_penalty, category_penalty + density_penalty + phrase_penalty)
     # If any category triggered, score can never be 5.
     if failed:
         total_penalty = max(1, total_penalty)
 
-    return max(0, 5 - total_penalty), total_vocab_hits, density_penalty
+    return max(0, 5 - total_penalty), total_vocab_hits, density_penalty, total_phrase_hits
 
 def report(hits, burst, word_count=0, label='', allow_proof=False, suggest=False):
-    score, total_vocab_hits, density_penalty = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
+    score, total_vocab_hits, density_penalty, total_phrase_hits = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
 
     titles = {
         'vocab': 'AI vocabulary tells',
@@ -700,7 +709,7 @@ Options:
 
     if as_json:
         import json
-        score, total_vocab, density_penalty = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
+        score, total_vocab, density_penalty, total_phrases = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
         
         output_data = {
             'mode': mode,

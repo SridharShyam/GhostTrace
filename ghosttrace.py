@@ -549,6 +549,8 @@ Modes:
 Options:
   --suggest           Display one-click human synonym recommendations
   --report            Generate interactive visual heatmap HTML report (report.html)
+  --output=<path>     Specify output path for the HTML report (default: report.html)
+  --json              Output raw audit results, burstiness metrics, and suggestions in JSON
   --allow-proof       Suppress scoring penalty for customer/user counts
   --markdown          Force markdown parser
   --latex             Force LaTeX parser
@@ -560,6 +562,15 @@ Options:
         if a.startswith('--mode='):
             mode = a.split('=', 1)[1]
     args = [a for a in args if not a.startswith('--mode=')]
+
+    report_output_path = "report.html"
+    for a in args:
+        if a.startswith('--output='):
+            report_output_path = a.split('=', 1)[1]
+    args = [a for a in args if not a.startswith('--output=')]
+
+    as_json = '--json' in args
+    args = [a for a in args if a != '--json']
 
     allow_proof = '--allow-proof' in args
     args = [a for a in args if a != '--allow-proof']
@@ -607,14 +618,34 @@ Options:
     if not parsed_text.split():
         sys.exit('ghosttrace: no visible copy to score — empty input')
 
-    print(f'GhostTrace [{mode.upper()} MODE]: {len(parsed_text.split())} words of visible copy\n')
-
     hits = audit(parsed_text, mode=mode)
     burst = analyze_burstiness(parsed_text)
+
+    if as_json:
+        import json
+        weights = {'vocab': 1, 'phrases': 1, 'punctuation': 1, 'rhythm': 1, 'proof': 1, 'academic_hype': 1}
+        if allow_proof:
+            weights['proof'] = 0
+        failed = [k for k, v in hits.items() if v]
+        score = max(0, 5 - sum(weights[k] for k in failed if k in weights))
+        
+        output_data = {
+            'mode': mode,
+            'word_count': len(parsed_text.split()),
+            'score': score,
+            'status': 'CLEAN' if score == 5 else 'NEEDS_CLEANSE',
+            'burstiness': burst,
+            'hits': hits,
+            'suggestions': dict(get_suggestions(hits)),
+        }
+        print(json.dumps(output_data, indent=2))
+        sys.exit(0 if score == 5 else 1)
+
+    print(f'GhostTrace [{mode.upper()} MODE]: {len(parsed_text.split())} words of visible copy\n')
     score = report(hits, burst, allow_proof=allow_proof, suggest=suggest)
 
     if gen_report:
-        report_file = generate_heatmap_html(raw_text, hits, burst, score)
+        report_file = generate_heatmap_html(raw_text, hits, burst, score, filename=report_output_path)
         print(f'\n  Visual Heatmap generated: file:///{os.path.abspath(report_file).replace("\\\\", "/")}')
 
     sys.exit(0 if score == 5 else 1)

@@ -626,12 +626,19 @@ def main():
         pass
 
     args = sys.argv[1:]
+    if args and args[0] == 'cleanse':
+        from ghosttrace.cleanse import main as cleanse_main
+        sys.argv = [sys.argv[0]] + args[1:]
+        cleanse_main()
+        return
+
     if not args:
         print("""GhostTrace: AI Trace & Slop Remover
 
 Usage:
-  python ghosttrace.py [file] [options]
-  python ghosttrace.py --text "copy to check" [options]
+  ghosttrace [file] [options]
+  ghosttrace --text "copy to check" [options]
+  ghosttrace cleanse [file] [options]
 
 Modes:
   --mode=general      General writing & copy (default)

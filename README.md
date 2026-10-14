@@ -5,6 +5,7 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Python 3](https://img.shields.io/badge/Python-3.8%2B-green.svg)
+![CI](https://github.com/SridharShyam/GhostTrace/actions/workflows/ci.yml/badge.svg)
 ![Zero Dependencies](https://img.shields.io/badge/Dependencies-Standard%20Library-brightgreen.svg)
 
 ---
@@ -20,27 +21,46 @@ Traditional AI detectors (e.g., Turnitin, GPTZero) are **black boxes** that spit
 3. **LaTeX Native:** Strips math environments, citations, and tags without breaking.
 4. **Statistical Burstiness:** Detects the flat, monotonous sentence rhythm characteristic of LLMs.
 5. **Interactive Guidance:** Proposes human synonyms and generates an HTML visual heatmap.
-6. **100% Offline & Private:** Zero cloud API dependencies; your unpublished research never leaves your machine.
+6. **Cross-Platform Auto-Cleanse:** Re-edits and cleanses drafts using alternate models or local LLMs.
+7. **100% Offline & Private:** Zero cloud API dependencies; your unpublished research never leaves your machine.
 
 ---
 
 ## Quick Start
 
-GhostTrace uses Python 3 and its standard library. No packages or API keys are required.
+### Installation
+
+Install globally or in editable mode via pip:
 
 ```bash
-# Clone the repository
 git clone https://github.com/SridharShyam/GhostTrace.git
 cd GhostTrace
+pip install -e .
+```
 
-# Audit a short draft with replacement suggestions
-python ghosttrace.py --text "In this paper, we delve into a revolutionary approach that provides seamless optimization." --suggest
+Once installed, you can invoke `ghosttrace` anywhere from your terminal. Or run it directly without installing:
 
-# Audit an IEEE LaTeX paper and generate a visual heatmap report
-python ghosttrace.py paper.tex --mode=academic --report --suggest
+```bash
+python ghosttrace.py --text "In this paper, we delve into a revolutionary approach." --suggest
+```
 
-# Audit a Markdown or plain text document
-python ghosttrace.py README.md --suggest
+### Usage Examples
+
+```bash
+# 1. Audit a short draft with replacement suggestions
+ghosttrace --text "In this paper, we delve into a revolutionary approach that provides seamless optimization." --suggest
+
+# 2. Audit an IEEE LaTeX paper and generate a visual heatmap report
+ghosttrace examples/sample_ieee.tex --mode=academic --report --suggest
+
+# 3. View unified diff of humanized substitutions and export cleaned copy
+ghosttrace examples/sample_ieee.tex --diff --clean=cleaned_paper.tex
+
+# 4. Run cross-model AI cleanser pass using a local or rival CLI model
+ghosttrace cleanse examples/sample_ieee.tex --model-cli="ollama run llama3" -o paper_cleansed.tex
+
+# 5. Print copy-paste editorial prompt for ChatGPT/Claude web chat
+ghosttrace cleanse examples/sample_ieee.tex --print-prompt
 ```
 
 ---

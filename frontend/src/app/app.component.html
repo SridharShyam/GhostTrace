@@ -12,19 +12,27 @@
 
   <span class="spacer"></span>
 
-  <!-- Mode Toggle (General vs Academic/IEEE) -->
+  <!-- Multi-Genre Detection Preset Selector -->
   <mat-button-toggle-group
     [value]="mode()"
     (change)="onModeChange($event.value)"
     class="mode-toggle-group"
     aria-label="Detection Mode">
-    <mat-button-toggle value="general">
+    <mat-button-toggle value="general" matTooltip="Standard copy, blogs, web text">
       <mat-icon>auto_fix_high</mat-icon>
       General
     </mat-button-toggle>
-    <mat-button-toggle value="academic">
+    <mat-button-toggle value="academic" matTooltip="IEEE, ACM, Springer research papers & LaTeX">
       <mat-icon>school</mat-icon>
-      Academic / IEEE
+      Academic
+    </mat-button-toggle>
+    <mat-button-toggle value="creative" matTooltip="Fiction, stories, and narrative prose">
+      <mat-icon>menu_book</mat-icon>
+      Creative
+    </mat-button-toggle>
+    <mat-button-toggle value="essay" matTooltip="College essays, applications, SOPs, grants">
+      <mat-icon>history_edu</mat-icon>
+      Essay
     </mat-button-toggle>
   </mat-button-toggle-group>
 

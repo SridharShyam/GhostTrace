@@ -73,7 +73,7 @@ export class AppComponent implements OnInit {
   @ViewChild('fileInputRef') fileInputRef!: ElementRef<HTMLInputElement>;
 
   // Reactive state signals
-  mode = signal<'general' | 'academic'>('general');
+  mode = signal<'general' | 'academic' | 'creative' | 'essay'>('general');
   randomizeSynonyms = signal<boolean>(true); // Anti-fingerprint entropy protection
   rawText = signal<string>(
     'In this study, we delve into a revolutionary approach that provides seamless optimization for next-level performance.'
@@ -136,7 +136,7 @@ export class AppComponent implements OnInit {
     this.runAudit();
   }
 
-  onModeChange(newMode: 'general' | 'academic') {
+  onModeChange(newMode: 'general' | 'academic' | 'creative' | 'essay') {
     this.mode.set(newMode);
     this.runAudit();
   }

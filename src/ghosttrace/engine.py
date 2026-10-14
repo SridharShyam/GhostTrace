@@ -120,12 +120,28 @@ BASE_PHRASES = [
     # AI transition padding tells
     (r"\b(furthermore|moreover|in addition),?\s+(it is (worth noting|important to note|crucial to understand))\b", "stacked transition filler"),
     (r"\bit is (worth noting|important to note|crucial to note) that\b", "throat-clearing note"),
-    # AI narrative & moral fable cliches
+]
+
+# Creative & Narrative Storytelling Cliches frequently output by LLMs
+NARRATIVE_PHRASES = [
     (r"\bchoosing \w+ over (temptation|greed|fear|dishonesty)\b", "AI moral conclusion cliche"),
     (r"\b(the right thing to do|only done (his|her|their|my) duty)\b", "sanctimonious fable cliche"),
-    (r"\b(smiled with relief|looked surprised to see|eyes filled with relief)\b", "stock AI narrative reaction"),
+    (r"\b(smiled with relief|looked surprised to see|eyes filled with relief|shaky smile)\b", "stock AI narrative reaction"),
     (r"\b(make someone'?s entire day better|small act of kindness|even a small good deed)\b", "moralistic parable phrasing"),
     (r"\bfor a moment, (he|she|they) thought about how\b", "stock internal monologue transition"),
+    (r"\b(felt proud of choosing|realised that even a|a testament to the power of)\b", "reflective moral summary"),
+    (r"\blittle did (he|she|they) know\b", "hackneyed suspense cliche"),
+    (r"\ba sense of (calm|peace|relief|warmth) washed over (him|her|them)\b", "stock AI emotional state"),
+    (r"\bwith a newfound sense of\b", "hackneyed character growth cliche"),
+]
+
+# Student Essay & Grant Proposal boilerplate
+ESSAY_PHRASES = [
+    (r"\bsince the dawn of (time|humanity|history)\b", "dawn of time cliche"),
+    (r"\bthroughout (human )?history, (man|humanity|people) (has|have)\b", "sweeping historical generalization"),
+    (r"\bin order to truly understand\b", "throat-clearing thesis opener"),
+    (r"\bit is undeniably true that\b", "heavy-handed declaration"),
+    (r"\bplays a pivotal role in shaping\b", "essay formula cliche"),
 ]
 
 # Academic-specific boilerplate sentences inserted by LLMs
@@ -356,6 +372,14 @@ def audit(text, mode='general'):
     active_phrases = list(BASE_PHRASES)
     if mode == 'academic':
         active_phrases.extend(ACADEMIC_PHRASES)
+    elif mode in ['creative', 'narrative', 'story']:
+        active_phrases.extend(NARRATIVE_PHRASES)
+    elif mode in ['essay', 'student', 'grant']:
+        active_phrases.extend(ESSAY_PHRASES)
+    else:
+        # General mode includes narrative and essay safeguards
+        active_phrases.extend(NARRATIVE_PHRASES)
+        active_phrases.extend(ESSAY_PHRASES)
 
     for pat, label in active_phrases:
         found = re.findall(pat, low)
@@ -758,6 +782,8 @@ Usage:
 Modes:
   --mode=general      General writing & copy (default)
   --mode=academic     Academic papers (IEEE, ACM, Springer), LaTeX-aware, whitelists technical terms
+  --mode=creative     Fiction, narratives, and creative writing (flags stock AI fable tropes & flat cadence)
+  --mode=essay        Student essays, statements of purpose, and grant proposals
 
 Options:
   --suggest           Display one-click human synonym recommendations

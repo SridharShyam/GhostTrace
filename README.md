@@ -129,8 +129,17 @@ Generates an interactive, standalone `report.html` highlighting flagged vocabula
 GhostTrace/
 ├── src/
 │   └── ghosttrace/
-│       ├── __init__.py         # Package exports
-│       └── engine.py           # Core detection, parser, and scoring engine
+│       ├── __init__.py         # Package exports & public API
+│       ├── engine.py           # Core detection, steganography parser & scoring engine
+│       ├── cleanse.py          # Cross-platform second-pass AI-to-AI humanizer
+│       └── ui/
+│           ├── server.py       # Standard library HTTP backend server & REST API
+│           ├── extractor.py    # Universal document reader (.docx, .pdf, .tex, .md, .txt)
+│           ├── templates/
+│           │   └── index.html  # Live heatmap editor & confirmation frontend
+│           └── static/
+│               ├── app.js      # Interactive live typing sync & client logic
+│               └── style.css   # Dark-mode glassmorphism design system
 ├── tests/
 │   └── test_ghosttrace.py      # Unit test suite
 ├── benchmarks/
@@ -138,8 +147,10 @@ GhostTrace/
 │   └── stress_test.py          # Adversarial edge-case audit
 ├── examples/
 │   ├── sample_ieee.tex         # Sample IEEE LaTeX paper with math & citations
-│   └── cleaned.txt             # Exported humanized sample output
-├── ghosttrace.py               # Root CLI executable wrapper
+│   ├── cleaned.txt             # Exported humanized sample output
+│   └── report.html             # Pre-generated sample visual heatmap report
+├── ghosttrace.py               # Root CLI executable launcher
+├── pyproject.toml              # Packaging configuration for pip install
 ├── SKILL.md                    # Agent integration specification
 ├── README.md                   # Project documentation
 └── LICENSE                     # MIT License (dual copyright attribution)

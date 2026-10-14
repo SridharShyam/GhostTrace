@@ -1,0 +1,222 @@
+<!-- Top Material Toolbar Navigation -->
+<mat-toolbar color="primary" class="gt-toolbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <mat-icon>security</mat-icon>
+    </div>
+    <div class="brand-text">
+      <span class="brand-title">GhostTrace</span>
+      <span class="brand-tag">v2.1 AI Slop & Watermark Remover</span>
+    </div>
+  </div>
+
+  <span class="spacer"></span>
+
+  <!-- Mode Toggle (General vs Academic/IEEE) -->
+  <mat-button-toggle-group
+    [value]="mode()"
+    (change)="onModeChange($event.value)"
+    class="mode-toggle-group"
+    aria-label="Detection Mode">
+    <mat-button-toggle value="general">
+      <mat-icon>auto_fix_high</mat-icon>
+      General
+    </mat-button-toggle>
+    <mat-button-toggle value="academic">
+      <mat-icon>school</mat-icon>
+      Academic / IEEE
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+
+  <!-- Hidden File Input for document upload -->
+  <input
+    #fileInputRef
+    type="file"
+    class="hidden-file-input"
+    accept=".docx,.docs,.pdf,.tex,.md,.txt,.html"
+    (change)="onFileSelected($event)"
+    aria-label="Upload document file"
+    title="Upload document file">
+
+  <!-- Upload Button -->
+  <button
+    mat-flat-button
+    class="upload-btn"
+    (click)="triggerFileUpload()"
+    matTooltip="Upload .docx, .pdf, .tex, .md, or .txt">
+    <mat-icon>upload_file</mat-icon>
+    Upload Document
+  </button>
+</mat-toolbar>
+
+<!-- Linear Progress Bar while uploading -->
+<mat-progress-bar *ngIf="isLoading()" mode="indeterminate" color="accent"></mat-progress-bar>
+
+<!-- Main Dashboard Container -->
+<main class="gt-dashboard">
+
+  <!-- Telemetry / Metrics Row -->
+  <section class="metrics-grid">
+    <!-- Score Card -->
+    <mat-card class="metric-card" [class.metric-clean]="score() === 5" [class.metric-warn]="score() < 5 && score() >= 3" [class.metric-danger]="score() < 3">
+      <mat-card-header>
+        <mat-card-subtitle>Cleanliness Score</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="metric-content">
+        <div class="metric-primary-val">{{ score() }}/5</div>
+        <mat-chip [highlighted]="true" [color]="score() === 5 ? 'primary' : 'warn'">
+          {{ score() === 5 ? 'CLEAN' : (score() >= 3 ? 'FAIR' : 'NEEDS CLEANSE') }}
+        </mat-chip>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Sentence Burstiness Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-subtitle>Sentence Burstiness</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="metric-content">
+        <div class="metric-primary-val">{{ burstiness() }} σ</div>
+        <span class="burst-label" [class.monotonous]="isMonotonous()">
+          <mat-icon class="inline-icon">{{ isMonotonous() ? 'warning' : 'check_circle' }}</mat-icon>
+          {{ isMonotonous() ? 'Flat AI Cadence' : 'Natural Pacing' }}
+        </span>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Slop Density Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-subtitle>AI Slop Density</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="metric-content">
+        <div class="metric-primary-val">{{ density() }}%</div>
+        <span class="metric-subtext">{{ wordCount() }} Words Audited</span>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Intrinsic Watermarks Card -->
+    <mat-card class="metric-card">
+      <mat-card-header>
+        <mat-card-subtitle>Zero-Width Watermarks</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="metric-content">
+        <div class="metric-primary-val" [class.text-danger]="watermarkCount() > 0">
+          {{ watermarkCount() }}
+        </div>
+        <span class="watermark-label">
+          <mat-icon class="inline-icon">{{ watermarkCount() > 0 ? 'gps_fixed' : 'verified' }}</mat-icon>
+          {{ watermarkCount() > 0 ? 'Detected & Flagged' : 'Steganography-Free' }}
+        </span>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <!-- Main Workspace: Dual Split Editor & Review Panel -->
+  <section class="workspace-grid">
+
+    <!-- Left Panel: Interactive Live Heatmap Editor -->
+    <mat-card class="panel-card editor-panel">
+      <mat-card-header class="panel-header">
+        <div class="panel-title-group">
+          <mat-card-title>Interactive Heatmap Editor</mat-card-title>
+          <mat-card-subtitle>Type or edit directly — highlights update live</mat-card-subtitle>
+        </div>
+        <div class="legend">
+          <span class="legend-badge badge-red">Vocabulary Slop</span>
+          <span class="legend-badge badge-yellow">Academic Hype</span>
+        </div>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content class="panel-content editor-body">
+        <div class="editor-stage">
+          <!-- Live Underlay Heatmap -->
+          <div #heatmapRef class="heatmap-underlay" [innerHTML]="safeHeatmapHtml()"></div>
+
+          <!-- Foreground Transparent Textarea -->
+          <textarea
+            #editorRef
+            class="editor-textarea"
+            [ngModel]="rawText()"
+            (ngModelChange)="onTextChange($event)"
+            (scroll)="syncScroll()"
+            placeholder="Paste your text or upload a document to begin AI slop audit..."
+            spellcheck="false"
+            aria-label="Interactive Text Editor"></textarea>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Right Panel: Humanize & Confirmation Queue -->
+    <mat-card class="panel-card review-panel">
+      <mat-card-header class="panel-header">
+        <div class="panel-title-group">
+          <mat-card-title>Humanize & Review Queue</mat-card-title>
+          <mat-card-subtitle>Confirm replacements before committing changes</mat-card-subtitle>
+        </div>
+        <div class="action-buttons">
+          <button
+            mat-raised-button
+            color="primary"
+            class="humanize-action-btn"
+            [disabled]="reviewQueue().length === 0"
+            (click)="applyConfirmedHumanize()">
+            <mat-icon>auto_fix_normal</mat-icon>
+            Apply Confirmed Humanize
+          </button>
+        </div>
+      </mat-card-header>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-content class="panel-content review-body">
+        <!-- Empty State -->
+        <div *ngIf="reviewQueue().length === 0" class="empty-state">
+          <mat-icon class="empty-icon">verified_user</mat-icon>
+          <h3>Clean Slate</h3>
+          <p>No active AI vocabulary tells detected in your current text.</p>
+        </div>
+
+        <!-- Replacement Cards -->
+        <div *ngFor="let item of reviewQueue()" class="suggestion-card">
+          <div class="card-top">
+            <mat-checkbox [(ngModel)]="item.accepted" color="primary">
+              <span class="checkbox-label">Accept replacement</span>
+            </mat-checkbox>
+            <span class="tag-slop">AI Slop Buzzword</span>
+          </div>
+
+          <div class="replacement-row">
+            <span class="word-old">{{ item.word }}</span>
+            <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="replacement-select">
+              <mat-select [(ngModel)]="item.selectedAlternative">
+                <mat-option *ngFor="let alt of item.alternatives" [value]="alt">
+                  {{ alt }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-divider></mat-divider>
+
+      <!-- Panel Footer: Copy & Download Actions -->
+      <mat-card-actions class="panel-footer">
+        <button mat-stroked-button (click)="copySanitizedText()">
+          <mat-icon>content_copy</mat-icon>
+          Copy Cleaned Text
+        </button>
+        <button mat-stroked-button (click)="downloadSanitizedText()">
+          <mat-icon>download</mat-icon>
+          Download (.txt)
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+  </section>
+</main>

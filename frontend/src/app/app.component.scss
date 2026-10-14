@@ -351,6 +351,12 @@
       color: #fde68a;
       border: 1px solid rgba(245, 158, 11, 0.4);
     }
+
+    &.badge-rose {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fecdd3;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+    }
   }
 }
 
@@ -400,6 +406,14 @@
     background: rgba(245, 158, 11, 0.3);
     color: #fef08a;
     border-bottom: 2px solid #f59e0b;
+    border-radius: 3px;
+    padding: 1px 3px;
+  }
+
+  ::ng-deep .slop-phrase {
+    background: rgba(244, 63, 94, 0.3);
+    color: #fecdd3;
+    border-bottom: 2px solid #f43f5e;
     border-radius: 3px;
     padding: 1px 3px;
   }

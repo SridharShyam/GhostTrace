@@ -420,7 +420,9 @@ def audit(text, mode='general'):
     for pat, label in active_phrases:
         found = re.findall(pat, low)
         if found:
-            hits['phrases'].append((label, len(found)))
+            # Extract matches with full matched strings for UI highlighting
+            raw_matches = [m.group(0) for m in re.finditer(pat, text, flags=re.I)]
+            hits['phrases'].append((label, len(found), raw_matches))
 
     # 3. Academic Hype (if academic mode)
     if mode == 'academic':
@@ -462,13 +464,44 @@ def audit(text, mode='general'):
 
 # ── 5. Humanizer & Alternative Suggestions ────────────────────────────────────
 
+PHRASE_REPLACEMENTS = {
+    'the right thing to do': ['necessary', 'responsible', 'fair'],
+    'only done his duty': ['simply helped out', 'just assisted', 'returned what was his'],
+    'smiled with relief': ['breathed out', 'visibly relaxed', 'thanked him gratefully'],
+    'eyes filled with relief': ['relaxed completely', 'looked genuinely relieved'],
+    'shaky smile': ['warm smile', 'grateful grin'],
+    'make someone’s entire day better': ['brighten someone’s morning', 'offer genuine help'],
+    'small act of kindness': ['simple gesture', 'everyday help'],
+    'even a small good deed': ['doing something decent', 'lending a hand'],
+    'for a moment, he thought about how': ['he wondered briefly how', 'he hesitated, considering how'],
+    'felt proud of choosing': ['felt good about', 'walked away satisfied'],
+    'in order to truly understand': ['to understand', 'to grasp'],
+    'it is undeniably true that': ['clearly', 'evidence shows that'],
+    'since the dawn of time': ['historically', 'for centuries'],
+    'since the dawn of human history': ['across human history', 'for millennia'],
+    'plays a pivotal role in shaping': ['significantly influences', 'helps shape', 'impacts'],
+}
+
 def get_suggestions(hits):
-    """Generate human replacement alternatives for detected tells."""
+    """Generate human replacement alternatives for detected tells (words and phrases)."""
     suggestions = []
+    # 1. Vocabulary suggestions
     for item in hits.get('vocab', []):
         word = item[0]
         if word in REPLACEMENTS:
             suggestions.append((word, REPLACEMENTS[word]))
+
+    # 2. Phrase suggestions
+    for item in hits.get('phrases', []):
+        matches = item[2] if len(item) > 2 and isinstance(item[2], list) else []
+        for m in matches:
+            m_low = m.lower().strip()
+            # Match directly or by close substring in PHRASE_REPLACEMENTS
+            for key, alts in PHRASE_REPLACEMENTS.items():
+                if key in m_low or m_low in key:
+                    suggestions.append((m, alts))
+                    break
+
     return suggestions
 
 def humanize_text(text, hits, soften_em_dashes=False, randomize=False):

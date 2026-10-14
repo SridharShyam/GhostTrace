@@ -130,6 +130,18 @@ export class AppComponent implements OnInit {
       }
     }
 
+    // Amber/Orange highlights for AI narrative, essay & rhetorical phrases
+    if (data.hits?.phrases) {
+      for (const rawItem of data.hits.phrases) {
+        const item: any = rawItem;
+        const matches: string[] = (item && Array.isArray(item) && item.length > 2 && Array.isArray(item[2])) ? item[2] : [];
+        for (const m of matches) {
+          const re = new RegExp(`(${this.escapeRegex(m)})`, 'gi');
+          escaped = escaped.replace(re, '<mark class="slop-phrase">$1</mark>');
+        }
+      }
+    }
+
     return this.sanitizer.bypassSecurityTrustHtml(escaped);
   });
 

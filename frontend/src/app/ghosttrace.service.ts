@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface AuditHits {
   vocab?: Array<[string, number]>;
-  phrases?: Array<[string, number]>;
+  phrases?: Array<[string, number, string[]?] | any>;
   academic_hype?: Array<[string, number]>;
   intro_cliches?: Array<[string, number]>;
   chatgpt_isms?: Array<[string, number]>;

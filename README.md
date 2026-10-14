@@ -47,19 +47,22 @@ python ghosttrace.py --text "In this paper, we delve into a revolutionary approa
 ### Usage Examples
 
 ```bash
-# 1. Audit a short draft with replacement suggestions
+# 1. Launch the interactive browser Web UI with live heatmap and confirmation editor
+ghosttrace ui
+
+# 2. Audit a short draft with replacement suggestions
 ghosttrace --text "In this paper, we delve into a revolutionary approach that provides seamless optimization." --suggest
 
-# 2. Audit an IEEE LaTeX paper and generate a visual heatmap report
+# 3. Audit an IEEE LaTeX paper and generate a visual heatmap report
 ghosttrace examples/sample_ieee.tex --mode=academic --report --suggest
 
-# 3. View unified diff of humanized substitutions and export cleaned copy
+# 4. View unified diff of humanized substitutions and export cleaned copy
 ghosttrace examples/sample_ieee.tex --diff --clean=cleaned_paper.tex
 
-# 4. Run cross-model AI cleanser pass using a local or rival CLI model
+# 5. Run cross-model AI cleanser pass using a local or rival CLI model
 ghosttrace cleanse examples/sample_ieee.tex --model-cli="ollama run llama3" -o paper_cleansed.tex
 
-# 5. Print copy-paste editorial prompt for ChatGPT/Claude web chat
+# 6. Print copy-paste editorial prompt for ChatGPT/Claude web chat
 ghosttrace cleanse examples/sample_ieee.tex --print-prompt
 ```
 

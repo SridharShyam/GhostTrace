@@ -1,0 +1,41 @@
+import io
+import os
+import re
+
+def extract_text_from_file(filename, file_bytes):
+    """Extracts raw text from .docx, .pdf, .tex, .md, .txt, or .html files."""
+    ext = os.path.splitext(filename)[1].lower()
+
+    if ext in ['.txt', '.md', '.tex', '.html', '.htm']:
+        return file_bytes.decode('utf-8', errors='replace')
+
+    if ext in ['.docx', '.docs']:
+        try:
+            import docx
+            doc = docx.Document(io.BytesIO(file_bytes))
+            full_text = []
+            for para in doc.paragraphs:
+                full_text.append(para.text)
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = [cell.text.strip() for cell in row.cells]
+                    full_text.append(" | ".join(row_text))
+            return "\n\n".join(full_text)
+        except Exception as e:
+            return f"[Error extracting text from Word document: {str(e)}]"
+
+    if ext == '.pdf':
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            pages = []
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    pages.append(text)
+            return "\n\n".join(pages)
+        except Exception as e:
+            return f"[Error extracting text from PDF: {str(e)}]"
+
+    # Fallback decode
+    return file_bytes.decode('utf-8', errors='replace')

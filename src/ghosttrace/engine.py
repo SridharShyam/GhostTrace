@@ -712,12 +712,22 @@ def main():
         cleanse_main()
         return
 
+    if args and args[0] in ['ui', 'web', 'gui']:
+        from ghosttrace.ui.server import run_server
+        port = 7860
+        for a in args:
+            if a.startswith('--port='):
+                port = int(a.split('=', 1)[1])
+        run_server(port=port)
+        return
+
     if not args:
         print("""GhostTrace: AI Trace & Slop Remover
 
 Usage:
   ghosttrace [file] [options]
   ghosttrace --text "copy to check" [options]
+  ghosttrace ui [--port=7860]
   ghosttrace cleanse [file] [options]
 
 Modes:

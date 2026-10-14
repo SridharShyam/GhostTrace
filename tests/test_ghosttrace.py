@@ -78,5 +78,19 @@ class TestGhostTrace(unittest.TestCase):
         self.assertIn('seamless', suggestions)
         self.assertIn('smooth', suggestions['seamless'])
 
+    def test_watermark_detection_and_sanitization(self):
+        from ghosttrace import detect_watermarks, sanitize_watermarks
+        raw = "Hidden\u200b steganography\u200c and\u00a0special spaces—with—dashes."
+        detected = detect_watermarks(raw)
+        self.assertIn('Zero-Width Space (ZWSP)', detected)
+        self.assertIn('Zero-Width Non-Joiner (ZWNJ)', detected)
+        self.assertIn('Non-Breaking Space (NBSP)', detected)
+
+        clean = sanitize_watermarks(raw, replace_em_dashes=True)
+        self.assertNotIn('\u200b', clean)
+        self.assertNotIn('\u200c', clean)
+        self.assertNotIn('\u00a0', clean)
+        self.assertNotIn('—', clean)
+
 if __name__ == '__main__':
     unittest.main()

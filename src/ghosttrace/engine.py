@@ -143,11 +143,82 @@ PROOF = re.compile(
     re.I
 )
 
-# ── 2. Text Normalization & Format Cleaners ───────────────────────────────────
+# Invisible Zero-Width Characters and Unicode Steganography used in AI Watermarking
+ZERO_WIDTH_CHARS = {
+    '\u200B': 'Zero-Width Space (ZWSP)',
+    '\u200C': 'Zero-Width Non-Joiner (ZWNJ)',
+    '\u200D': 'Zero-Width Joiner (ZWJ)',
+    '\uFEFF': 'Zero-Width No-Break Space / BOM',
+    '\u200E': 'Left-to-Right Mark (LRM)',
+    '\u200F': 'Right-to-Left Mark (RLM)',
+    '\u202A': 'Left-to-Right Embedding',
+    '\u202C': 'Pop Directional Formatting',
+    '\u00AD': 'Soft Hyphen',
+}
+
+# Exotic and unusual Unicode spaces
+UNUSUAL_SPACES = {
+    '\u00A0': 'Non-Breaking Space (NBSP)',
+    '\u2000': 'En Quad',
+    '\u2001': 'Em Quad',
+    '\u2002': 'En Space',
+    '\u2003': 'Em Space',
+    '\u2004': 'Three-Per-Em Space',
+    '\u2005': 'Four-Per-Em Space',
+    '\u2006': 'Six-Per-Em Space',
+    '\u2007': 'Figure Space',
+    '\u2008': 'Punctuation Space',
+    '\u2009': 'Thin Space',
+    '\u200A': 'Hair Space',
+    '\u202F': 'Narrow No-Break Space',
+    '\u205F': 'Medium Mathematical Space',
+    '\u3000': 'Ideographic Space',
+}
+
+def detect_watermarks(text):
+    """Detects invisible zero-width characters, abnormal spaces, and em-dash clusters."""
+    found = {}
+    for char, name in ZERO_WIDTH_CHARS.items():
+        count = text.count(char)
+        if count:
+            found[name] = count
+
+    for char, name in UNUSUAL_SPACES.items():
+        count = text.count(char)
+        if count:
+            found[name] = count
+
+    em_dash_count = text.count('—') + text.count('–')
+    if em_dash_count >= 3:
+        found['Abnormal Em/En Dash Frequency'] = em_dash_count
+
+    return found
+
+def sanitize_watermarks(text, replace_em_dashes=False):
+    """Purges zero-width steganography, normalizes spaces, and optionally softens em-dashes."""
+    sanitized = text
+    # 1. Strip all invisible zero-width characters completely
+    for char in ZERO_WIDTH_CHARS:
+        sanitized = sanitized.replace(char, '')
+
+    # 2. Normalize all exotic spaces to standard ASCII 0x20
+    for char in UNUSUAL_SPACES:
+        sanitized = sanitized.replace(char, ' ')
+
+    # 3. Normalize non-breaking hyphens to standard hyphen
+    sanitized = sanitized.replace('‑', '-')
+
+    # 4. Optional: replace em-dashes with comma/hyphen pairs if requested
+    if replace_em_dashes:
+        sanitized = re.sub(r'\s*—\s*', ', ', sanitized)
+        sanitized = re.sub(r'\s*–\s*', ' - ', sanitized)
+
+    return sanitized
 
 def normalise(t):
-    """Normalize typographic quotes, dashes, spaces."""
-    t = t.replace('‑', '-').replace('\xa0', ' ').replace('’', "'").replace('“', '"').replace('”', '"')
+    """Normalize typographic quotes, dashes, spaces and purge invisible watermarks."""
+    t = sanitize_watermarks(t)
+    t = t.replace('’', "'").replace('“', '"').replace('”', '"')
     return re.sub(r'\s+', ' ', t).strip()
 
 def read_utf8(path):
@@ -334,11 +405,13 @@ def get_suggestions(hits):
             suggestions.append((word, REPLACEMENTS[word]))
     return suggestions
 
-def humanize_text(text, hits):
-    """Apply top recommended human replacements and generate a diff."""
+def humanize_text(text, hits, soften_em_dashes=False):
+    """Apply top recommended human replacements, purge invisible watermarks, and generate a diff."""
     import difflib
-    cleaned = text
-    # Replace matched vocabulary with top human alternative
+    # 1. Strip invisible zero-width watermarks and exotic spaces first
+    cleaned = sanitize_watermarks(text, replace_em_dashes=soften_em_dashes)
+
+    # 2. Replace matched vocabulary with top human alternative
     for item in hits.get('vocab', []):
         word = item[0]
         if word in REPLACEMENTS and REPLACEMENTS[word]:
@@ -570,7 +643,7 @@ def calculate_score(hits, word_count=0, allow_proof=False):
 
     return max(0, 5 - total_penalty), total_vocab_hits, density_penalty, total_phrase_hits
 
-def report(hits, burst, word_count=0, label='', allow_proof=False, suggest=False):
+def report(hits, burst, raw_text='', word_count=0, label='', allow_proof=False, suggest=False):
     score, total_vocab_hits, density_penalty, total_phrase_hits = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
 
     titles = {
@@ -600,6 +673,13 @@ def report(hits, burst, word_count=0, label='', allow_proof=False, suggest=False
         print(f'\n  cadence & burstiness: std_dev = {burst["std_dev"]} (avg {burst["avg_len"]} words/sentence)')
         if burst['is_monotonous']:
             print('    [!] Warning: Flat sentence length cadence detected (classic AI signature)')
+
+    # Watermark Steganography Report
+    watermarks = detect_watermarks(raw_text if raw_text else "")
+    if watermarks:
+        print('\n  [!] Intrinsic AI Watermarks / Unicode Steganography Detected:')
+        for name, count in watermarks.items():
+            print(f'    * {name}: {count} instance(s) found')
 
     # Suggestions / Replacements
     if suggest:
@@ -647,7 +727,8 @@ Modes:
 Options:
   --suggest           Display one-click human synonym recommendations
   --diff              Display unified diff showing humanized replacements
-  --clean=<path>      Export humanized text to a file
+  --clean=<path>      Export humanized and watermark-sanitized text to a file
+  --soften-dashes     Normalize heavy em-dashes (—) into standard punctuation
   --report            Generate interactive visual heatmap HTML report (report.html)
   --output=<path>     Specify output path for the HTML report (default: report.html)
   --json              Output raw audit results, burstiness metrics, and suggestions in JSON
@@ -662,6 +743,9 @@ Options:
         if a.startswith('--mode='):
             mode = a.split('=', 1)[1]
     args = [a for a in args if not a.startswith('--mode=')]
+
+    soften_dashes = '--soften-dashes' in args
+    args = [a for a in args if a != '--soften-dashes']
 
     clean_export_path = None
     for a in args:
@@ -744,15 +828,16 @@ Options:
             'density_penalty': density_penalty,
             'burstiness': burst,
             'hits': hits,
+            'watermarks': detect_watermarks(raw_text),
             'suggestions': dict(get_suggestions(hits)),
         }
         print(json.dumps(output_data, indent=2))
         sys.exit(0 if score == 5 else 1)
 
     print(f'GhostTrace [{mode.upper()} MODE]: {word_count} words of visible copy\n')
-    score = report(hits, burst, word_count=word_count, allow_proof=allow_proof, suggest=suggest)
+    score = report(hits, burst, raw_text=raw_text, word_count=word_count, allow_proof=allow_proof, suggest=suggest)
 
-    cleaned_text, diff_output = humanize_text(raw_text, hits)
+    cleaned_text, diff_output = humanize_text(raw_text, hits, soften_em_dashes=soften_dashes)
 
     if show_diff:
         print('\n== Humanized Diff View:')

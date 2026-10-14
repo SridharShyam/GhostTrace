@@ -127,16 +127,19 @@ GhostTrace/
 ## Running Tests & Benchmarks
 
 Run unit tests:
+
 ```bash
 python tests/test_ghosttrace.py
 ```
 
 Run accuracy validation & benchmarking:
+
 ```bash
 python benchmarks/benchmark_accuracy.py
 ```
 
 Run adversarial stress tests:
+
 ```bash
 python benchmarks/stress_test.py
 ```

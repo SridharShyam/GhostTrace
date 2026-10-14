@@ -390,6 +390,7 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GhostTrace Audit Report</title>
 <style>
   :root {{
@@ -420,6 +421,22 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
     margin-bottom: 2rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }}
+  .header-top {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }}
+  .title {{
+    margin: 0;
+    font-size: 1.8rem;
+  }}
+  .subtitle {{
+    margin: 0.25rem 0 0 0;
+    color: var(--text-muted);
+  }}
+  .section-title {{
+    font-size: 1.3rem;
+  }}
   .score-badge {{
     display: inline-block;
     font-size: 1.5rem;
@@ -443,6 +460,7 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
   }}
   .stat-card .label {{ font-size: 0.85rem; color: var(--text-muted); }}
   .stat-card .val {{ font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem; }}
+  .stat-card .val-small {{ font-size: 1rem; }}
   .content-card {{
     background: var(--card);
     border: 1px solid var(--border);
@@ -470,10 +488,10 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
 <body>
 <div class="container">
   <div class="header">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="header-top">
       <div>
-        <h1 style="margin: 0; font-size: 1.8rem;">GhostTrace Audit Report</h1>
-        <p style="margin: 0.25rem 0 0 0; color: var(--text-muted);">Deterministic AI Trace & Slop Analysis</p>
+        <h1 class="title">GhostTrace Audit Report</h1>
+        <p class="subtitle">Deterministic AI Trace & Slop Analysis</p>
       </div>
       <div>
         <span class="score-badge">{score}/5 {'CLEAN' if score == 5 else 'NEEDS CLEANSE'}</span>
@@ -486,7 +504,7 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
       </div>
       <div class="stat-card">
         <div class="label">Pacing Diagnosis</div>
-        <div class="val" style="font-size: 1rem;">{burst_status}</div>
+        <div class="val val-small">{burst_status}</div>
       </div>
       <div class="stat-card">
         <div class="label">Average Sentence Length</div>
@@ -495,7 +513,7 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
     </div>
   </div>
 
-  <h2 style="font-size: 1.3rem;">Visual Slop Heatmap</h2>
+  <h2 class="section-title">Visual Slop Heatmap</h2>
   <div class="content-card">
 {highlighted}
   </div>

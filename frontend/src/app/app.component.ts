@@ -87,6 +87,9 @@ export class AppComponent implements OnInit {
   wordCount = computed(() => this.auditData()?.word_count ?? 0);
   burstiness = computed(() => this.auditData()?.burstiness?.std_dev ?? 0);
   isMonotonous = computed(() => this.auditData()?.burstiness?.is_monotonous ?? false);
+  sentenceLengths = computed(() => this.auditData()?.burstiness?.sentence_lengths ?? []);
+  entropy = computed(() => this.auditData()?.burstiness?.entropy ?? 0);
+  passiveRatio = computed(() => this.auditData()?.burstiness?.passive_ratio ?? 0);
 
   watermarkCount = computed(() => {
     const wm = this.auditData()?.watermarks;
@@ -148,6 +151,14 @@ export class AppComponent implements OnInit {
     this.debounceTimer = setTimeout(() => {
       this.runAudit();
     }, 250);
+  }
+
+  mathMax(a: number, b: number): number {
+    return Math.max(a, b);
+  }
+
+  mathMin(a: number, b: number): number {
+    return Math.min(a, b);
   }
 
   syncScroll() {

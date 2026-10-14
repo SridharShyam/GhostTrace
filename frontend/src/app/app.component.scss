@@ -197,6 +197,89 @@
   }
 }
 
+// Sentence Cadence / Rhythm Strip
+.rhythm-strip {
+  background: rgba(17, 24, 39, 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  .rhythm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .rhythm-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #ffffff;
+
+      .rhythm-icon {
+        color: var(--accent-cyan);
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .rhythm-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+  }
+
+  .histogram-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    height: 110px;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+
+    .histogram-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 28px;
+
+      .histogram-bar {
+        width: 18px;
+        border-radius: 4px 4px 0 0;
+        background: linear-gradient(180deg, #6366f1, #4f46e5);
+        transition: height 0.3s ease, background 0.3s ease;
+
+        &.bar-ai {
+          background: linear-gradient(180deg, #f59e0b, #d97706);
+        }
+
+        &.bar-human {
+          background: linear-gradient(180deg, #10b981, #059669);
+        }
+
+        &:hover {
+          filter: brightness(1.2);
+        }
+      }
+
+      .bar-label {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+      }
+    }
+  }
+}
+
 // Workspace Split
 .workspace-grid {
   display: grid;

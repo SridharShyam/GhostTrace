@@ -309,31 +309,67 @@ def latex_prose(tex):
 # ── 3. Statistical Burstiness & Pacing Analyzer ───────────────────────────────
 
 def analyze_burstiness(text):
-    """Calculates sentence length variance (burstiness).
+    """Calculates statistical pacing, Shannon lexical entropy, and syntactic cadence.
 
     Human writing features high standard deviation in sentence lengths (punchy short
-    sentences alternating with complex compound sentences). AI models typically output
-    monotonous sentence lengths (14-18 words) with low standard deviation.
+    sentences alternating with complex compound sentences) and high lexical entropy.
+    AI models typically output monotonous sentence lengths (12-18 words) with low
+    variance and formulaic syntactic depth.
     """
     raw_sentences = re.split(r'(?<=[.!?])\s+', text)
     sentences = [s.strip() for s in raw_sentences if len(s.strip().split()) >= 3]
 
-    if len(sentences) < 5:
-        return {'score': 'N/A (text too short)', 'std_dev': 0, 'avg_len': 0, 'is_monotonous': False}
+    words = re.findall(r'\b[a-z]{2,}\b', text.lower())
+    total_words = len(words)
+
+    # 1. Shannon Lexical Entropy calculation
+    entropy = 0.0
+    if total_words > 0:
+        counts = {}
+        for w in words:
+            counts[w] = counts.get(w, 0) + 1
+        for count in counts.values():
+            p = count / total_words
+            entropy -= p * math.log2(p)
+
+    # 2. Passive Voice Density Estimation (passive aux + past participle)
+    passive_matches = len(re.findall(
+        r'\b(?:is|are|was|were|be|been|being)\s+([a-z]{3,}ed|[a-z]{3,}en|built|done|made|found|shown|proven|written|held)\b',
+        text.lower()
+    ))
+    passive_ratio = round((passive_matches / max(1, len(sentences))) * 100, 1)
+
+    if len(sentences) < 3:
+        return {
+            'score': 'N/A (text too short)',
+            'std_dev': 0,
+            'avg_len': 0,
+            'is_monotonous': False,
+            'sentence_lengths': [len(s.split()) for s in sentences],
+            'entropy': round(entropy, 2),
+            'passive_ratio': passive_ratio,
+            'min_len': min([len(s.split()) for s in sentences]) if sentences else 0,
+            'max_len': max([len(s.split()) for s in sentences]) if sentences else 0
+        }
 
     lengths = [len(s.split()) for s in sentences]
     avg = sum(lengths) / len(lengths)
     variance = sum((l - avg) ** 2 for l in lengths) / len(lengths)
     std_dev = math.sqrt(variance)
 
-    # Standard deviation < 5.0 across a sustained passage is a classic sign of AI cadence
-    is_monotonous = (std_dev < 5.2 and len(sentences) >= 10)
+    # Standard deviation < 3.5 across 5+ sentences is a classic indicator of AI cadence
+    is_monotonous = (std_dev < 3.2 and len(sentences) >= 5) or (std_dev < 5.0 and len(sentences) >= 10)
 
     return {
         'total_sentences': len(sentences),
         'avg_len': round(avg, 1),
         'std_dev': round(std_dev, 2),
         'is_monotonous': is_monotonous,
+        'sentence_lengths': lengths,
+        'entropy': round(entropy, 2),
+        'passive_ratio': passive_ratio,
+        'min_len': min(lengths),
+        'max_len': max(lengths)
     }
 
 # ── 4. Audit Engine ───────────────────────────────────────────────────────────

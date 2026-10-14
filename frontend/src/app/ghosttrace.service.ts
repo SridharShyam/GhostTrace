@@ -14,9 +14,14 @@ export interface AuditHits {
 
 export interface BurstinessInfo {
   std_dev: number;
-  mean_length: number;
+  avg_len?: number;
+  mean_length?: number;
   is_monotonous: boolean;
   sentence_lengths: number[];
+  entropy?: number;
+  passive_ratio?: number;
+  min_len?: number;
+  max_len?: number;
 }
 
 export interface AuditResponse {

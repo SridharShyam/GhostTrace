@@ -92,14 +92,14 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Slop Density Card -->
+    <!-- Lexical Entropy Card -->
     <mat-card class="metric-card">
       <mat-card-header>
-        <mat-card-subtitle>AI Slop Density</mat-card-subtitle>
+        <mat-card-subtitle>Shannon Lexical Entropy</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content class="metric-content">
-        <div class="metric-primary-val">{{ density() }}%</div>
-        <span class="metric-subtext">{{ wordCount() }} Words Audited</span>
+        <div class="metric-primary-val">{{ entropy() }} bits</div>
+        <span class="metric-subtext">{{ passiveRatio() }}% Passive Voice</span>
       </mat-card-content>
     </mat-card>
 
@@ -118,6 +118,30 @@
         </span>
       </mat-card-content>
     </mat-card>
+  </section>
+
+  <!-- Interactive Sentence Cadence / Rhythm Histogram -->
+  <section class="rhythm-strip" *ngIf="sentenceLengths().length > 0">
+    <div class="rhythm-header">
+      <div class="rhythm-title">
+        <mat-icon class="rhythm-icon">bar_chart</mat-icon>
+        <span>Sentence Length Rhythm Profile ({{ sentenceLengths().length }} sentences detected)</span>
+      </div>
+      <span class="rhythm-hint">Humans write in peaks & valleys; LLMs write in flat bars</span>
+    </div>
+    <div class="histogram-bars">
+      <div
+        *ngFor="let len of sentenceLengths(); let idx = index"
+        class="histogram-bar-wrap"
+        [matTooltip]="'Sentence ' + (idx + 1) + ': ' + len + ' words'">
+        <div
+          class="histogram-bar"
+          [style.height.px]="mathMax(12, mathMin(len * 3.5, 90))"
+          [class.bar-ai]="len >= 12 && len <= 16 && isMonotonous()"
+          [class.bar-human]="len < 10 || len > 22"></div>
+        <span class="bar-label">{{ len }}w</span>
+      </div>
+    </div>
   </section>
 
   <!-- Main Workspace: Dual Split Editor & Review Panel -->

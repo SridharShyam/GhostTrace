@@ -114,7 +114,7 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
             hits = audit(parsed_text, mode=mode)
             burst = analyze_burstiness(parsed_text)
             word_count = len(parsed_text.split())
-            score, total_vocab, density_penalty, total_phrases = calculate_score(hits, word_count=word_count)
+            score, total_vocab, density_penalty, total_phrases = calculate_score(hits, word_count=word_count, burst=burst)
             watermarks = detect_watermarks(raw_text)
             suggestions = dict(get_suggestions(hits))
 

@@ -120,6 +120,12 @@ BASE_PHRASES = [
     # AI transition padding tells
     (r"\b(furthermore|moreover|in addition),?\s+(it is (worth noting|important to note|crucial to understand))\b", "stacked transition filler"),
     (r"\bit is (worth noting|important to note|crucial to note) that\b", "throat-clearing note"),
+    # AI narrative & moral fable cliches
+    (r"\bchoosing \w+ over (temptation|greed|fear|dishonesty)\b", "AI moral conclusion cliche"),
+    (r"\b(the right thing to do|only done (his|her|their|my) duty)\b", "sanctimonious fable cliche"),
+    (r"\b(smiled with relief|looked surprised to see|eyes filled with relief)\b", "stock AI narrative reaction"),
+    (r"\b(make someone'?s entire day better|small act of kindness|even a small good deed)\b", "moralistic parable phrasing"),
+    (r"\bfor a moment, (he|she|they) thought about how\b", "stock internal monologue transition"),
 ]
 
 # Academic-specific boilerplate sentences inserted by LLMs
@@ -612,7 +618,7 @@ def generate_heatmap_html(raw_text, hits, burst, score, filename="report.html"):
 
 # ── 7. Reporting & CLI ────────────────────────────────────────────────────────
 
-def calculate_score(hits, word_count=0, allow_proof=False):
+def calculate_score(hits, word_count=0, allow_proof=False, burst=None):
     """Calculates score based on both categorical violations and AI word density.
 
     1. Base categorical penalty: -1 per triggered category.
@@ -620,6 +626,8 @@ def calculate_score(hits, word_count=0, allow_proof=False):
        - >= 10% density: -3 penalty
        - >= 5% density:  -2 penalty
        - >= 2.5% density: -1 penalty
+    3. Cadence / Burstiness penalty:
+       - If >= 5 sentences and std_dev < 2.5 (unnatural LLM uniformity): -1 penalty
     """
     weights = {'vocab': 1, 'phrases': 1, 'punctuation': 1, 'rhythm': 1, 'proof': 1, 'academic_hype': 1}
     if allow_proof:
@@ -648,15 +656,20 @@ def calculate_score(hits, word_count=0, allow_proof=False):
         elif density >= 2.5:
             density_penalty = 1
 
-    total_penalty = max(category_penalty, category_penalty + density_penalty + phrase_penalty)
-    # If any category triggered, score can never be 5.
-    if failed:
+    # Burstiness penalty: severely flat sentence length cadence across >= 5 sentences
+    burst_penalty = 0
+    if burst and burst.get('total_sentences', 0) >= 5 and burst.get('is_monotonous', False):
+        burst_penalty = 1
+
+    total_penalty = max(category_penalty, category_penalty + density_penalty + phrase_penalty + burst_penalty)
+    # If any category triggered or cadence is flat, score can never be 5.
+    if failed or burst_penalty > 0:
         total_penalty = max(1, total_penalty)
 
     return max(0, 5 - total_penalty), total_vocab_hits, density_penalty, total_phrase_hits
 
 def report(hits, burst, raw_text='', word_count=0, label='', allow_proof=False, suggest=False):
-    score, total_vocab_hits, density_penalty, total_phrase_hits = calculate_score(hits, word_count=word_count, allow_proof=allow_proof)
+    score, total_vocab_hits, density_penalty, total_phrase_hits = calculate_score(hits, word_count=word_count, allow_proof=allow_proof, burst=burst)
 
     titles = {
         'vocab': 'AI vocabulary tells',

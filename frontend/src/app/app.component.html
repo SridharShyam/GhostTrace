@@ -158,6 +158,15 @@
         </div>
         <div class="action-buttons">
           <button
+            mat-icon-button
+            class="shuffle-btn"
+            matTooltip="Shuffle candidate synonyms to eliminate static dictionary fingerprints"
+            [disabled]="reviewQueue().length === 0"
+            (click)="shuffleCandidateAlternatives()">
+            <mat-icon>shuffle</mat-icon>
+          </button>
+
+          <button
             mat-raised-button
             color="primary"
             class="humanize-action-btn"
@@ -168,6 +177,21 @@
           </button>
         </div>
       </mat-card-header>
+
+      <!-- Anti-Fingerprint Advice Bar -->
+      <div class="anti-fingerprint-banner">
+        <div class="banner-left">
+          <mat-icon class="shield-icon">security</mat-icon>
+          <span class="banner-text">Anti-Bypasser Resilience: <strong>Active</strong> (Varied Synonyms + Zero Steganography)</span>
+        </div>
+        <mat-slide-toggle
+          [checked]="randomizeSynonyms()"
+          (change)="randomizeSynonyms.set($event.checked)"
+          color="accent"
+          matTooltip="Enforces non-deterministic synonym distribution to defeat detector reverse-engineering">
+          High Entropy
+        </mat-slide-toggle>
+      </div>
 
       <mat-divider></mat-divider>
 

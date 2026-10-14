@@ -26,6 +26,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { GhostTraceService, AuditResponse } from './ghosttrace.service';
 
@@ -56,7 +57,8 @@ interface ReviewItem {
     MatTooltipModule,
     MatSnackBarModule,
     MatBadgeModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSlideToggleModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -72,6 +74,7 @@ export class AppComponent implements OnInit {
 
   // Reactive state signals
   mode = signal<'general' | 'academic'>('general');
+  randomizeSynonyms = signal<boolean>(true); // Anti-fingerprint entropy protection
   rawText = signal<string>(
     'In this study, we delve into a revolutionary approach that provides seamless optimization for next-level performance.'
   );
@@ -208,15 +211,36 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    const items: ReviewItem[] = Object.entries(suggestions).map(([word, alts], idx) => ({
-      id: idx,
-      word,
-      alternatives: alts,
-      selectedAlternative: alts[0] || '',
-      accepted: true
-    }));
+    const items: ReviewItem[] = Object.entries(suggestions).map(([word, alts], idx) => {
+      // If entropy protection is enabled, pick a random alternative to avoid static dictionary signatures
+      let initialPick = alts[0] || '';
+      if (this.randomizeSynonyms() && alts.length > 1) {
+        const randIdx = Math.floor(Math.random() * alts.length);
+        initialPick = alts[randIdx];
+      }
+      return {
+        id: idx,
+        word,
+        alternatives: alts,
+        selectedAlternative: initialPick,
+        accepted: true
+      };
+    });
 
     this.reviewQueue.set(items);
+  }
+
+  shuffleCandidateAlternatives() {
+    const updated = this.reviewQueue().map(item => {
+      if (item.alternatives.length > 1) {
+        const remaining = item.alternatives.filter(a => a !== item.selectedAlternative);
+        const next = remaining[Math.floor(Math.random() * remaining.length)];
+        return { ...item, selectedAlternative: next };
+      }
+      return item;
+    });
+    this.reviewQueue.set(updated);
+    this.showSnack('🔀 Shuffled synonyms across all candidate cards for maximum entropy');
   }
 
   // One-Click Confirmed Humanize

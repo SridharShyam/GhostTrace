@@ -405,26 +405,38 @@ def get_suggestions(hits):
             suggestions.append((word, REPLACEMENTS[word]))
     return suggestions
 
-def humanize_text(text, hits, soften_em_dashes=False):
-    """Apply top recommended human replacements, purge invisible watermarks, and generate a diff."""
+def humanize_text(text, hits, soften_em_dashes=False, randomize=False):
+    """Apply recommended human replacements, purge invisible watermarks, and generate a diff.
+    
+    Args:
+        text (str): Raw input text.
+        hits (dict): Detection results dictionary.
+        soften_em_dashes (bool): Replace em dashes with standard hyphens/commas.
+        randomize (bool): If True, randomly picks from candidate synonyms to avoid
+            leaving a deterministic 'bypasser' dictionary signature that anti-humanizer
+            detectors look for.
+    """
     import difflib
-    # 1. Strip invisible zero-width watermarks and exotic spaces first
+    import random
+    
+    # 1. Strip invisible zero-width watermarks and exotic spaces first (anti-steganography)
     cleaned = sanitize_watermarks(text, replace_em_dashes=soften_em_dashes)
 
-    # 2. Replace matched vocabulary with top human alternative
+    # 2. Replace matched vocabulary with natural human alternatives
     for item in hits.get('vocab', []):
         word = item[0]
         if word in REPLACEMENTS and REPLACEMENTS[word]:
-            replacement = REPLACEMENTS[word][0]
+            alts = REPLACEMENTS[word]
+            replacement = random.choice(alts) if randomize else alts[0]
             # Case-preserving replacement
             pattern = re.compile(rf"\b({re.escape(word)})\b", re.I)
-            def _sub(m):
+            def _sub(m, rep=replacement):
                 matched = m.group(1)
                 if matched.isupper():
-                    return replacement.upper()
+                    return rep.upper()
                 elif matched[0].isupper():
-                    return replacement.capitalize()
-                return replacement
+                    return rep.capitalize()
+                return rep
             cleaned = pattern.sub(_sub, cleaned)
             
     diff_lines = list(difflib.unified_diff(
@@ -737,6 +749,7 @@ Modes:
 Options:
   --suggest           Display one-click human synonym recommendations
   --diff              Display unified diff showing humanized replacements
+  --randomize         Randomize synonym picks to eliminate static dictionary signatures
   --clean=<path>      Export humanized and watermark-sanitized text to a file
   --soften-dashes     Normalize heavy em-dashes (—) into standard punctuation
   --report            Generate interactive visual heatmap HTML report (report.html)
@@ -756,6 +769,9 @@ Options:
 
     soften_dashes = '--soften-dashes' in args
     args = [a for a in args if a != '--soften-dashes']
+
+    randomize = '--randomize' in args
+    args = [a for a in args if a != '--randomize']
 
     clean_export_path = None
     for a in args:
@@ -847,7 +863,7 @@ Options:
     print(f'GhostTrace [{mode.upper()} MODE]: {word_count} words of visible copy\n')
     score = report(hits, burst, raw_text=raw_text, word_count=word_count, allow_proof=allow_proof, suggest=suggest)
 
-    cleaned_text, diff_output = humanize_text(raw_text, hits, soften_em_dashes=soften_dashes)
+    cleaned_text, diff_output = humanize_text(raw_text, hits, soften_em_dashes=soften_dashes, randomize=randomize)
 
     if show_diff:
         print('\n== Humanized Diff View:')

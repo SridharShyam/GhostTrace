@@ -337,6 +337,59 @@
 }
 
 // Right Panel Humanize
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shuffle-btn {
+  color: var(--text-muted) !important;
+  transition: transform 0.2s, color 0.2s;
+
+  &:hover:not(:disabled) {
+    color: var(--accent-cyan) !important;
+    transform: rotate(45deg);
+  }
+}
+
+.anti-fingerprint-banner {
+  background: rgba(6, 182, 212, 0.08);
+  border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+  padding: 0.65rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .shield-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--accent-cyan);
+    }
+
+    .banner-text {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+
+      strong {
+        color: var(--accent-cyan);
+      }
+    }
+  }
+
+  mat-slide-toggle {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
 .humanize-action-btn {
   background: linear-gradient(135deg, #10b981, #059669) !important;
   color: #ffffff !important;

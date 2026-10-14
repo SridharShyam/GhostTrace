@@ -100,12 +100,45 @@ Generates an interactive, standalone `report.html` highlighting flagged vocabula
 
 ---
 
-## Running Tests
+## Project Structure
 
-GhostTrace includes a full unit test suite:
+```text
+GhostTrace/
+├── src/
+│   └── ghosttrace/
+│       ├── __init__.py         # Package exports
+│       └── engine.py           # Core detection, parser, and scoring engine
+├── tests/
+│   └── test_ghosttrace.py      # Unit test suite
+├── benchmarks/
+│   ├── benchmark_accuracy.py   # Accuracy, recall & precision benchmarking suite
+│   └── stress_test.py          # Adversarial edge-case audit
+├── examples/
+│   ├── sample_ieee.tex         # Sample IEEE LaTeX paper with math & citations
+│   └── cleaned.txt             # Exported humanized sample output
+├── ghosttrace.py               # Root CLI executable wrapper
+├── SKILL.md                    # Agent integration specification
+├── README.md                   # Project documentation
+└── LICENSE                     # MIT License (dual copyright attribution)
+```
 
+---
+
+## Running Tests & Benchmarks
+
+Run unit tests:
 ```bash
-python test_ghosttrace.py
+python tests/test_ghosttrace.py
+```
+
+Run accuracy validation & benchmarking:
+```bash
+python benchmarks/benchmark_accuracy.py
+```
+
+Run adversarial stress tests:
+```bash
+python benchmarks/stress_test.py
 ```
 
 ---

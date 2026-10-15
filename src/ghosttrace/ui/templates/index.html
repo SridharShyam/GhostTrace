@@ -3,123 +3,224 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GhostTrace - AI Trace & Watermark Remover</title>
+  <title>GhostTrace — AI Slop & Watermark Remover</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="brand">
-      <div class="brand-icon">GT</div>
-      <div class="brand-name">GhostTrace</div>
-    </div>
-    <div class="nav-controls">
-      <div class="mode-selector">
-        <button class="mode-btn active" data-mode="general" onclick="setMode('general')">General</button>
-        <button class="mode-btn" data-mode="academic" onclick="setMode('academic')">Academic / IEEE</button>
-      </div>
-      <div class="file-upload-wrapper">
-        <button class="btn btn-secondary">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-          Upload Document
-        </button>
-        <input type="file" id="file-upload" class="file-upload-input" accept=".docx,.docs,.pdf,.tex,.md,.txt,.html" title="Upload Document File" aria-label="Upload document file" placeholder="Upload document">
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Container -->
-  <main class="main-wrapper">
-
-    <!-- Live Telemetry / Metrics Bar -->
-    <section class="metrics-strip">
-      <div class="metric-card">
-        <span class="metric-title">Cleanliness Score</span>
-        <div class="metric-value">
-          <span id="score-value">5/5</span>
-          <span class="metric-desc badge-clean" id="score-badge">CLEAN</span>
+  <!-- Unstop Top Header Bar -->
+  <header class="unstop-navbar">
+    <div class="unstop-nav-container">
+      
+      <!-- Brand & Privacy Indicator -->
+      <div class="brand-section">
+        <div class="unstop-logo-badge">GT</div>
+        <div class="brand-info">
+          <div class="brand-name">
+            GhostTrace
+            <span class="brand-privacy-chip" title="Zero cloud telemetry. All computations run 100% locally on your machine.">
+              <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+              Zero-Trust Local
+            </span>
+          </div>
+          <span class="brand-tagline">AI Detection, Rhythm Profiling & Steganographic Watermark Remover</span>
         </div>
       </div>
-      <div class="metric-card">
-        <span class="metric-title">Sentence Burstiness</span>
-        <div class="metric-value" id="burst-value">0.0 σ</div>
-        <span class="metric-desc" id="burst-desc">Natural Pacing</span>
+
+      <!-- Mode Selector & Upload Action -->
+      <div class="nav-actions">
+        <!-- Genre Preset Buttons (Unstop Segmented Tab Style) -->
+        <div class="unstop-tabs-group" id="mode-tabs">
+          <button class="tab-btn active" data-mode="general" onclick="setMode('general')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            General
+          </button>
+          <button class="tab-btn" data-mode="academic" onclick="setMode('academic')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path></svg>
+            Academic
+          </button>
+          <button class="tab-btn" data-mode="creative" onclick="setMode('creative')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            Creative
+          </button>
+          <button class="tab-btn" data-mode="essay" onclick="setMode('essay')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Essay
+          </button>
+        </div>
+
+        <!-- Document Upload Button -->
+        <label class="btn-upload" for="file-upload">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Upload Document / ZIP
+          <input type="file" id="file-upload" accept=".docx,.docs,.pdf,.tex,.md,.txt,.html,.zip" style="display: none;" title="Upload document" aria-label="Upload document">
+        </label>
       </div>
-      <div class="metric-card">
-        <span class="metric-title">AI Buzzword Density</span>
-        <div class="metric-value" id="density-value">0%</div>
-        <span class="metric-desc">Proportion of flagged text</span>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="unstop-main">
+
+    <!-- 4 Diagnostic Metric Cards -->
+    <section class="metrics-row">
+      <!-- 1. Cleanliness Score -->
+      <div class="unstop-card">
+        <div class="card-label">
+          <span>Cleanliness Score</span>
+          <span class="stat-chip clean" id="score-badge">CLEAN</span>
+        </div>
+        <div class="card-main-stat">
+          <span class="stat-value" id="score-value">5/5</span>
+        </div>
+        <div class="card-subtext">
+          <span>Overall writing naturalness</span>
+        </div>
       </div>
-      <div class="metric-card">
-        <span class="metric-title">Hidden Watermarks</span>
-        <div class="metric-value" id="watermark-value">0</div>
-        <span class="metric-desc" id="watermark-desc">No steganography</span>
+
+      <!-- 2. Sentence Burstiness -->
+      <div class="unstop-card">
+        <div class="card-label">
+          <span>Sentence Burstiness</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+        <div class="card-main-stat">
+          <span class="stat-value" id="burst-value">0.0 σ</span>
+        </div>
+        <div class="card-subtext">
+          <span id="burst-desc">Natural Pacing</span>
+        </div>
+      </div>
+
+      <!-- 3. Shannon Lexical Entropy -->
+      <div class="unstop-card">
+        <div class="card-label">
+          <span>Lexical Entropy</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <div class="card-main-stat">
+          <span class="stat-value" id="entropy-value">0.00 bits</span>
+        </div>
+        <div class="card-subtext">
+          <span id="passive-desc">0.0% Passive Voice</span>
+        </div>
+      </div>
+
+      <!-- 4. Zero-Width Watermarks -->
+      <div class="unstop-card">
+        <div class="card-label">
+          <span>Hidden Watermarks</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+        </div>
+        <div class="card-main-stat">
+          <span class="stat-value" id="watermark-value">0</span>
+        </div>
+        <div class="card-subtext">
+          <span id="watermark-desc">Steganography-Free</span>
+          <button id="btn-purge-quick" class="btn-purge-direct" style="display: none;" onclick="purgeWatermarksDirect()">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            Purge Now
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- Side-by-Side Workspace -->
-    <section class="workspace">
+    <!-- Sentence Length Rhythm Profile -->
+    <section class="rhythm-card" id="rhythm-section">
+      <div class="rhythm-header">
+        <span class="rhythm-title">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          Sentence Length Rhythm Profile (<span id="sentence-count">0</span> sentences detected)
+        </span>
+        <span class="rhythm-legend">Humans write in varied peaks & valleys; LLMs write in flat bars</span>
+      </div>
+      <div class="rhythm-bars" id="rhythm-bars">
+        <!-- Bars injected dynamically -->
+      </div>
+    </section>
 
-      <!-- Left Panel: Interactive Live Heatmap Editor -->
-      <div class="panel">
+    <!-- Dual Split Workspace -->
+    <section class="workspace-split">
+
+      <!-- Left Panel: Interactive Editor & Live Heatmap -->
+      <div class="panel-white">
         <div class="panel-header">
           <span class="panel-title">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            Interactive Editor & Live Heatmap
+            Interactive Heatmap Editor
           </span>
-          <span class="metric-desc">Supported: .docx, .pdf, .tex, .md, .txt</span>
-        </div>
-        <div class="editor-container">
-          <div id="heatmap" class="heatmap-preview"></div>
-          <textarea id="editor" class="editor-textarea" placeholder="Paste your text or upload a document (.docx, .pdf, .tex, .md, .txt)..." spellcheck="false"></textarea>
-        </div>
-        <div class="bottom-bar">
-          <span class="metric-desc">Live analysis active</span>
-          <div class="action-bar">
-            <button class="btn btn-outline" onclick="editor.value=''; currentRawText=''; runAudit();">Clear</button>
+          <div class="badge-row">
+            <span class="badge badge-vocab">Vocabulary Slop</span>
+            <span class="badge badge-hype">Academic Hype</span>
+            <span class="badge badge-cliche">AI Clichés</span>
+            <button class="btn-icon-clear" onclick="clearEditor()" title="Clear editor content">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              Clear
+            </button>
           </div>
+        </div>
+
+        <div class="editor-wrapper">
+          <div id="heatmap" class="heatmap-layer"></div>
+          <textarea id="editor" class="editor-input" placeholder="Type, paste text or upload a document to begin detection..." spellcheck="false"></textarea>
         </div>
       </div>
 
-      <!-- Right Panel: Humanizer, Replacement Confirmation & Clean Actions -->
-      <div class="panel">
+      <!-- Right Panel: Humanize & Review Queue -->
+      <div class="panel-white">
         <div class="panel-header">
           <span class="panel-title">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Review & Confirm Substitutions
+            Humanize & Review Queue
           </span>
-          <div class="action-bar">
-            <button class="btn btn-success" onclick="applyReplacements()">
+          <div class="review-actions-header">
+            <button id="btn-shuffle" class="btn-shuffle" onclick="shuffleCandidateAlternatives()" title="Shuffle candidate synonyms to avoid static patterns" disabled>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h7l4 8h5M4 20h7l4-8h5"></path></svg>
+            </button>
+            <button id="btn-humanize" class="btn-humanize-main" onclick="applyReplacements()" disabled>
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
-              Apply Confirmed
+              Apply Confirmed Humanize
             </button>
           </div>
         </div>
+
+        <!-- Security / Entropy Ribbon -->
+        <div class="security-ribbon">
+          <span>Anti-Bypasser Resilience: <strong>Active (Varied Synonyms + Zero Steganography)</strong></span>
+          <label class="toggle-entropy">
+            <input type="checkbox" id="chk-entropy" checked onchange="toggleEntropy(this.checked)">
+            High Entropy
+          </label>
+        </div>
+
+        <!-- Dynamic Review List -->
         <div id="review-queue" class="review-body">
-          <!-- Dynamic diff confirmation cards injected by app.js -->
+          <!-- Injected dynamically by app.js -->
         </div>
-        <div class="bottom-bar">
-          <div class="action-bar">
-            <button class="btn btn-secondary" onclick="copyToClipboard()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-              Copy Cleaned
-            </button>
-            <button class="btn btn-secondary" onclick="downloadCleanedFile()">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              Download File
-            </button>
-          </div>
+
+        <!-- Panel Footer -->
+        <div class="panel-footer">
+          <button class="btn-secondary" onclick="copyToClipboard()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+            Copy Cleaned Text
+          </button>
+          <button class="btn-secondary" onclick="downloadCleanedFile()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Download Clean Document
+          </button>
         </div>
       </div>
 
     </section>
+
   </main>
 
-  <div id="toast" class="toast">Action performed successfully</div>
+  <!-- Notification Toast -->
+  <div id="toast" class="toast-msg">Action performed successfully</div>
 
   <script src="/static/app.js"></script>
 </body>

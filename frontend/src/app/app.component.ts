@@ -81,6 +81,7 @@ export class AppComponent implements OnInit {
   auditData = signal<AuditResponse | null>(null);
   isLoading = signal<boolean>(false);
   reviewQueue = signal<ReviewItem[]>([]);
+  uploadedFileName = signal<string>('document.txt');
 
   // Computed state metrics
   score = computed(() => this.auditData()?.score ?? 5);
@@ -194,8 +195,9 @@ export class AppComponent implements OnInit {
       next: (res) => {
         this.isLoading.set(false);
         if (res.text) {
+          this.uploadedFileName.set(file.name);
           this.rawText.set(res.text);
-          if (file.name.endsWith('.tex')) {
+          if (file.name.endsWith('.tex') || file.name.endsWith('.zip')) {
             this.mode.set('academic');
           }
           this.runAudit();
@@ -303,14 +305,32 @@ export class AppComponent implements OnInit {
 
   downloadSanitizedText() {
     const clean = this.purgeWatermarks(this.rawText());
+    const origName = this.uploadedFileName();
+    let downloadName = 'ghosttrace_sanitized.txt';
+
+    if (origName && origName.includes('.')) {
+      const parts = origName.split('.');
+      const ext = parts.pop()?.toLowerCase();
+      const base = parts.join('.');
+      if (ext === 'tex') {
+        downloadName = `${base}_sanitized.tex`;
+      } else if (ext === 'md') {
+        downloadName = `${base}_sanitized.md`;
+      } else if (ext === 'zip') {
+        downloadName = `${base}_sanitized.tex`;
+      } else {
+        downloadName = `${base}_sanitized.txt`;
+      }
+    }
+
     const blob = new Blob([clean], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'ghosttrace_sanitized.txt';
+    a.download = downloadName;
     a.click();
     URL.revokeObjectURL(url);
-    this.showSnack('📥 Downloaded sanitized file.');
+    this.showSnack(`📥 Downloaded sanitized file (${downloadName}).`);
   }
 
   private purgeWatermarks(str: string): string {

@@ -4,22 +4,24 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghosttrace"
-version = "1.0.0"
+version = "2.1.0"
 authors = [
   { name="SHYAM S", email="144871368+SridharShyam@users.noreply.github.com" },
 ]
-description = "Deterministic AI trace and slop detection engine with academic IEEE support, LaTeX parsing, burstiness metrics, and human replacement guidance."
+description = "Production-grade AI slop detector, steganographic watermark remover, sentence rhythm profiler, and multi-genre humanizer."
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
-keywords = ["ai-detector", "anti-slop", "academic-writing", "latex", "ieee", "burstiness", "humanizer"]
+license = "MIT"
+keywords = ["ai-detector", "anti-slop", "watermark-remover", "academic-writing", "latex", "ieee", "burstiness", "humanizer"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Text Processing :: Linguistic",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
+
+[project.optional-dependencies]
+documents = ["python-docx>=0.8.11", "pypdf>=3.0.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/SridharShyam/GhostTrace"
@@ -30,3 +32,6 @@ ghosttrace = "ghosttrace.engine:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"ghosttrace.ui" = ["static/*", "templates/*"]

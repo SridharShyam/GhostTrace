@@ -847,8 +847,8 @@ def main():
         run_server(port=port, host=host, open_browser=open_browser)
         return
 
-    if not args:
-        print("""GhostTrace: AI Trace & Slop Remover
+    if not args or '-h' in args or '--help' in args or 'help' in args:
+        print("""GhostTrace: AI Trace & Slop Remover (v2.1.0)
 
 Usage:
   ghosttrace [file] [options]

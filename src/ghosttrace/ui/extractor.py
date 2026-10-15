@@ -37,5 +37,24 @@ def extract_text_from_file(filename, file_bytes):
         except Exception as e:
             return f"[Error extracting text from PDF: {str(e)}]"
 
+    if ext == '.zip':
+        try:
+            import zipfile
+            z = zipfile.ZipFile(io.BytesIO(file_bytes))
+            combined_texts = []
+            # Priority: .tex files first, then .md, then .txt
+            sorted_names = sorted(z.namelist(), key=lambda n: (not n.endswith('.tex'), not n.endswith('.md'), not n.endswith('.txt'), n))
+            for name in sorted_names:
+                if name.startswith('__MACOSX') or name.endswith('/'):
+                    continue
+                if name.endswith(('.tex', '.md', '.txt')):
+                    data = z.read(name).decode('utf-8', errors='replace')
+                    combined_texts.append(f"% === File: {name} ===\n{data}")
+            if combined_texts:
+                return "\n\n".join(combined_texts)
+            return "[No readable .tex, .md, or .txt files found in ZIP archive]"
+        except Exception as e:
+            return f"[Error extracting ZIP archive: {str(e)}]"
+
     # Fallback decode
     return file_bytes.decode('utf-8', errors='replace')

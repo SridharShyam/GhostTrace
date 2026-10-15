@@ -41,7 +41,7 @@
     #fileInputRef
     type="file"
     class="hidden-file-input"
-    accept=".docx,.docs,.pdf,.tex,.md,.txt,.html"
+    accept=".docx,.docs,.pdf,.tex,.md,.txt,.html,.zip"
     (change)="onFileSelected($event)"
     aria-label="Upload document file"
     title="Upload document file">
@@ -51,9 +51,9 @@
     mat-flat-button
     class="upload-btn"
     (click)="triggerFileUpload()"
-    matTooltip="Upload .docx, .pdf, .tex, .md, or .txt">
+    matTooltip="Upload .docx, .pdf, .tex, .md, .txt, or Overleaf .zip project">
     <mat-icon>upload_file</mat-icon>
-    Upload Document
+    Upload Document / ZIP
   </button>
 </mat-toolbar>
 

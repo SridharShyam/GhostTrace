@@ -296,6 +296,13 @@ export class AppComponent implements OnInit {
     this.showSnack(`✨ Humanized ${count} word(s) and sanitized intrinsic AI watermarks!`);
   }
 
+  purgeWatermarksOnly() {
+    const updated = this.purgeWatermarks(this.rawText());
+    this.rawText.set(updated);
+    this.runAudit();
+    this.showSnack(`🛡️ Successfully stripped all zero-width unicode watermarks and steganographic tokens!`);
+  }
+
   copySanitizedText() {
     const clean = this.purgeWatermarks(this.rawText());
     navigator.clipboard.writeText(clean).then(() => {

@@ -2,16 +2,16 @@
 
 @include mat.core();
 
-// Dark theme definition using Angular Material theme system
-$dark-theme: mat.define-theme((
+// Executive Slate & Deep Emerald Theme (Human, Editorial, Clean, Non-AI Aesthetic)
+$slate-theme: mat.define-theme((
   color: (
     theme-type: dark,
-    primary: mat.$azure-palette,
-    tertiary: mat.$magenta-palette,
+    primary: mat.$cyan-palette,
+    tertiary: mat.$orange-palette,
   ),
   typography: (
-    brand-family: 'Outfit, sans-serif',
-    plain-family: 'Inter, sans-serif',
+    brand-family: 'Newsreader, Georgia, serif',
+    plain-family: 'Inter, -apple-system, sans-serif',
   ),
   density: (
     scale: 0,
@@ -19,18 +19,25 @@ $dark-theme: mat.define-theme((
 ));
 
 :root {
-  --bg-base: #0a0e17;
-  --bg-surface: #111827;
-  --bg-card: rgba(17, 24, 39, 0.75);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(99, 102, 241, 0.35);
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-  --accent-primary: #6366f1;
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Slate Editorial & High-Contrast Typography */
+  --bg-base: #0c1117;
+  --bg-surface: #141c26;
+  --bg-card: rgba(20, 28, 38, 0.95);
+  --bg-stage: #090d12;
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-accent: rgba(45, 212, 191, 0.3);
+  --border-active: #2dd4bf;
+
+  --text-main: #f1f5f9;
+  --text-muted: #8b9bb4;
+  --text-highlight: #ffffff;
+
+  /* Natural Distinct Accents */
+  --accent-primary: #14b8a6;   /* Deep Teal */
+  --accent-emerald: #10b981;   /* Emerald Green */
+  --accent-amber: #eab308;     /* Warm Amber */
+  --accent-rose: #f43f5e;      /* Coral Red */
+  --accent-slate: #334155;     /* Structural Slate */
 }
 
 html, body {
@@ -44,24 +51,24 @@ html, body {
 }
 
 html {
-  @include mat.all-component-themes($dark-theme);
+  @include mat.all-component-themes($slate-theme);
 }
 
-// Custom scrollbar
+/* Polished Minimalist Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(148, 163, 184, 0.25);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.7);
+  background: rgba(45, 212, 191, 0.5);
 }

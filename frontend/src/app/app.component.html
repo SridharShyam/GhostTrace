@@ -118,10 +118,21 @@
         <div class="metric-primary-val" [class.text-danger]="watermarkCount() > 0">
           {{ watermarkCount() }}
         </div>
-        <span class="watermark-label">
-          <mat-icon class="inline-icon">{{ watermarkCount() > 0 ? 'gps_fixed' : 'verified' }}</mat-icon>
-          {{ watermarkCount() > 0 ? 'Detected & Flagged' : 'Steganography-Free' }}
-        </span>
+        <div class="watermark-action-row">
+          <span class="watermark-label">
+            <mat-icon class="inline-icon">{{ watermarkCount() > 0 ? 'gps_fixed' : 'verified' }}</mat-icon>
+            {{ watermarkCount() > 0 ? 'Detected & Flagged' : 'Steganography-Free' }}
+          </span>
+          <button
+            *ngIf="watermarkCount() > 0"
+            mat-stroked-button
+            class="purge-watermark-btn"
+            (click)="purgeWatermarksOnly()"
+            matTooltip="Instantly strip all 21 zero-width hidden characters">
+            <mat-icon>cleaning_services</mat-icon>
+            Purge Watermarks
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
   </section>
@@ -160,10 +171,17 @@
           <mat-card-title>Interactive Heatmap Editor</mat-card-title>
           <mat-card-subtitle>Type or edit directly — highlights update live</mat-card-subtitle>
         </div>
-        <div class="legend">
-          <span class="legend-badge badge-red">Vocabulary Slop</span>
-          <span class="legend-badge badge-yellow">Academic Hype</span>
-          <span class="legend-badge badge-rose">AI Clichés</span>
+        <div class="legend-and-tools">
+          <div class="legend">
+            <span class="legend-badge badge-red">Vocabulary Slop</span>
+            <span class="legend-badge badge-yellow">Academic Hype</span>
+            <span class="legend-badge badge-rose">AI Clichés</span>
+          </div>
+          <div class="editor-header-tools">
+            <button mat-icon-button (click)="rawText.set(''); runAudit()" matTooltip="Clear Editor" aria-label="Clear Editor">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
         </div>
       </mat-card-header>
 
@@ -206,10 +224,9 @@
           </button>
 
           <button
-            mat-raised-button
-            color="primary"
+            mat-flat-button
             class="humanize-action-btn"
-            [disabled]="reviewQueue().length === 0"
+            [disabled]="reviewQueue().length === 0 && watermarkCount() === 0"
             (click)="applyConfirmedHumanize()">
             <mat-icon>auto_fix_normal</mat-icon>
             Apply Confirmed Humanize
@@ -235,11 +252,26 @@
       <mat-divider></mat-divider>
 
       <mat-card-content class="panel-content review-body">
-        <!-- Empty State -->
+        <!-- Empty State / Watermarks Status -->
         <div *ngIf="reviewQueue().length === 0" class="empty-state">
-          <mat-icon class="empty-icon">verified_user</mat-icon>
-          <h3>Clean Slate</h3>
-          <p>No active AI vocabulary tells detected in your current text.</p>
+          <mat-icon class="empty-icon" [class.warn-icon]="watermarkCount() > 0">
+            {{ watermarkCount() > 0 ? 'gps_fixed' : 'verified_user' }}
+          </mat-icon>
+          <h3>{{ watermarkCount() > 0 ? '21 Invisible Watermarks Detected' : 'Vocabulary Clean' }}</h3>
+          <p *ngIf="watermarkCount() > 0">
+            No cliché buzzwords found, but <strong>{{ watermarkCount() }} hidden zero-width unicode characters</strong> were flagged in this text.
+          </p>
+          <p *ngIf="watermarkCount() === 0">
+            No active AI vocabulary tells or invisible watermarks detected in your text.
+          </p>
+          <button
+            *ngIf="watermarkCount() > 0"
+            mat-flat-button
+            class="empty-purge-btn"
+            (click)="purgeWatermarksOnly()">
+            <mat-icon>cleaning_services</mat-icon>
+            Purge All {{ watermarkCount() }} Watermarks Now
+          </button>
         </div>
 
         <!-- Replacement Cards -->

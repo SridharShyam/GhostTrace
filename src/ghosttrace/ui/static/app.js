@@ -140,7 +140,7 @@ function resetMetrics() {
   watermarkValue.textContent = '0';
   watermarkValue.className = 'stat-value';
   watermarkDesc.textContent = 'Steganography-Free';
-  btnPurgeQuick.style.display = 'none';
+  btnPurgeQuick.classList.add('hidden');
   rhythmBars.innerHTML = '';
   sentenceCount.textContent = '0';
   btnHumanize.disabled = true;
@@ -181,11 +181,11 @@ function renderMetrics() {
   if (totalWm > 0) {
     watermarkValue.className = 'stat-value danger';
     watermarkDesc.textContent = '⚠️ Steganographic tells detected';
-    btnPurgeQuick.style.display = 'inline-flex';
+    btnPurgeQuick.classList.remove('hidden');
   } else {
     watermarkValue.className = 'stat-value';
     watermarkDesc.textContent = 'Steganography-Free';
-    btnPurgeQuick.style.display = 'none';
+    btnPurgeQuick.classList.add('hidden');
   }
 
   // Enable/Disable Humanize button

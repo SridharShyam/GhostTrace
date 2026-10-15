@@ -175,6 +175,15 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+/* Utility Classes */
+.hidden {
+  display: none;
+}
+
+.hidden-input {
+  display: none;
+}
+
 /* Upload Button */
 .btn-upload {
   background: var(--unstop-blue);

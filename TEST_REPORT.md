@@ -8,9 +8,10 @@
 
 ## 1. Executive Summary
 
-A comprehensive battery of unit tests, recall/precision benchmarks, stress tests, and live API/UI end-to-end verifications was performed on the GhostTrace repository. 
+A comprehensive battery of unit tests, recall/precision benchmarks, stress tests, and live API/UI end-to-end verifications was performed on the GhostTrace repository.
 
 ### Overall Benchmark Scorecard
+
 | Test Category | Target Metric | Result | Status |
 | :--- | :--- | :--- | :--- |
 | **Unit Test Suite** | 100% Pass Rate | 6 / 6 Passed (0.14s) | ✅ PASS |
@@ -26,6 +27,7 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ## 2. Test Suite Breakdown
 
 ### 2.1 Core Unit Tests (`tests/test_ghosttrace.py`)
+
 | Test Case | Description | Result |
 | :--- | :--- | :--- |
 | `test_academic_boilerplate_detection` | Tests detection of academic filler (*"In recent years, rapid advancement has attracted widespread attention"*). | **PASSED** |
@@ -38,6 +40,7 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ---
 
 ### 2.2 Accuracy & Recall Benchmark (`benchmarks/benchmark_accuracy.py`)
+
 - **AI Text Recall Rate:** `100.0% (7/7)` across test cases including corporate hype, academic fluff, and multi-phrase rhetorical traps.
 - **Cadence Std-Dev Evaluation:**
   - AI Monotonous Text: $\sigma = 0.0$ (Correctly flagged with `[!] Warning: Flat sentence length cadence detected`).
@@ -48,6 +51,7 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ---
 
 ### 2.3 Edge-Case Stress Tests (`benchmarks/stress_test.py`)
+
 | Stress Scenario | Input Sample | Flagged Tells | Assigned Score |
 | :--- | :--- | :--- | :--- |
 | **Clustered Rhetorical Clichés** (19 words) | *"Whether you are a beginner or an expert, it is not just a tool, but a way of life."* | `'not just X, but Y'`, `'whether you're X or Y'` | **0 / 5** (High density penalty applied) |
@@ -59,6 +63,7 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ---
 
 ### 2.4 Live API & Steganography Verification
+
 - **POST `/api/audit`**:
   - Sample AI input: *"In this study, we delve into a revolutionary approach that provides seamless optimization for next-level performance."*
   - Response: Score `1/5`, Flagged `['delve', 'seamless', 'next-level']`, `density_penalty: 3`.
@@ -70,6 +75,7 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ---
 
 ### 2.5 Angular 19 Material Frontend Verification
+
 - **Framework & Styles**: Angular 19 with official `@angular/material` components running in dark glassmorphism styling (`mat-toolbar`, `mat-card`, `mat-chip`, `mat-button-toggle`, `mat-slide-toggle`, `mat-select`).
 - **Live Heatmap Sync**: As typing occurs, the underlay marks buzzwords in real-time red (`.slop-tell`) and academic hype in yellow (`.slop-hype`).
 - **Anti-Fingerprint Hardening**:
@@ -81,4 +87,5 @@ A comprehensive battery of unit tests, recall/precision benchmarks, stress tests
 ---
 
 ## 3. Conclusion & Recommendation
+
 GhostTrace satisfies all requirements for accuracy, reliability, resilience against counter-detection, and modern UI usability. The software is ready for production use.

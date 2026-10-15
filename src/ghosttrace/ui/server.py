@@ -100,77 +100,102 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
 
         # 1. Audit Live Text API
         if path == '/api/audit':
-            length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(length).decode('utf-8')
-            data = json.loads(body)
-            raw_text = data.get('text', '')
-            mode = data.get('mode', 'general')
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(length).decode('utf-8', errors='replace')
+                data = json.loads(body) if body.strip() else {}
+                raw_text = data.get('text', '')
+                mode = data.get('mode', 'general')
 
-            # Parse depending on mode/format
-            parsed_text = raw_text
-            if mode == 'academic' and ('\\section' in raw_text or '\\begin' in raw_text or '\\cite' in raw_text):
-                parsed_text = latex_prose(raw_text)
+                # Parse depending on mode/format
+                parsed_text = raw_text
+                if mode == 'academic' and ('\\section' in raw_text or '\\begin' in raw_text or '\\cite' in raw_text):
+                    parsed_text = latex_prose(raw_text)
 
-            hits = audit(parsed_text, mode=mode)
-            burst = analyze_burstiness(parsed_text)
-            word_count = len(parsed_text.split())
-            score, total_vocab, density_penalty, total_phrases = calculate_score(hits, word_count=word_count, burst=burst)
-            watermarks = detect_watermarks(raw_text)
-            suggestions = dict(get_suggestions(hits))
+                hits = audit(parsed_text, mode=mode)
+                burst = analyze_burstiness(parsed_text)
+                word_count = len(parsed_text.split())
+                score, total_vocab, density_penalty, total_phrases = calculate_score(hits, word_count=word_count, burst=burst)
+                watermarks = detect_watermarks(raw_text)
+                suggestions = dict(get_suggestions(hits))
 
-            response = {
-                'mode': mode,
-                'word_count': word_count,
-                'score': score,
-                'hits': hits,
-                'burstiness': burst,
-                'watermarks': watermarks,
-                'suggestions': suggestions,
-            }
-
-            resp_bytes = json.dumps(response).encode('utf-8')
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(resp_bytes)))
-            self.end_headers()
-            self.wfile.write(resp_bytes)
+                response = {
+                    'mode': mode,
+                    'word_count': word_count,
+                    'score': score,
+                    'hits': hits,
+                    'burstiness': burst,
+                    'watermarks': watermarks,
+                    'suggestions': suggestions,
+                }
+                resp_bytes = json.dumps(response).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(resp_bytes)))
+                self.end_headers()
+                self.wfile.write(resp_bytes)
+            except Exception as e:
+                err_resp = json.dumps({'error': f'Audit processing failed: {str(e)}'}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err_resp)))
+                self.end_headers()
+                self.wfile.write(err_resp)
             return
 
-        # 2. Document Upload API (.docx, .pdf, .tex, .md, .txt)
+        # 2. Document Upload API (.docx, .pdf, .tex, .md, .txt, .zip, etc.)
         if path == '/api/upload':
-            content_type = self.headers.get('Content-Type', '')
-            if 'multipart/form-data' not in content_type:
-                self.send_error(400, "Expected multipart/form-data")
-                return
+            try:
+                content_type = self.headers.get('Content-Type', '')
+                if 'multipart/form-data' not in content_type:
+                    err_resp = json.dumps({'error': 'Expected multipart/form-data'}).encode('utf-8')
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err_resp)))
+                    self.end_headers()
+                    self.wfile.write(err_resp)
+                    return
 
-            length = int(self.headers.get('Content-Length', 0))
-            raw_body = self.rfile.read(length)
+                length = int(self.headers.get('Content-Length', 0))
+                raw_body = self.rfile.read(length)
 
-            # Construct email message for clean multipart parsing
-            header_bytes = f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode('latin1')
-            msg = email.message_from_bytes(header_bytes + raw_body)
+                # Construct email message for clean multipart parsing
+                header_bytes = f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode('latin1')
+                msg = email.message_from_bytes(header_bytes + raw_body)
 
-            filename = "document.txt"
-            file_bytes = b""
+                filename = "document.txt"
+                file_bytes = b""
 
-            for part in msg.walk():
-                if part.get_filename():
-                    filename = part.get_filename()
-                    file_bytes = part.get_payload(decode=True)
-                    break
+                for part in msg.walk():
+                    if part.get_filename():
+                        filename = part.get_filename()
+                        file_bytes = part.get_payload(decode=True)
+                        break
 
-            if not file_bytes:
-                self.send_error(400, "No file found in multipart upload")
-                return
+                if not file_bytes:
+                    err_resp = json.dumps({'error': 'No file content found in upload.'}).encode('utf-8')
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err_resp)))
+                    self.end_headers()
+                    self.wfile.write(err_resp)
+                    return
 
-            extracted_text = extract_text_from_file(filename, file_bytes)
+                extracted_text = extract_text_from_file(filename, file_bytes)
 
-            resp_bytes = json.dumps({'filename': filename, 'text': extracted_text}).encode('utf-8')
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(resp_bytes)))
-            self.end_headers()
-            self.wfile.write(resp_bytes)
+                resp_bytes = json.dumps({'filename': filename, 'text': extracted_text}).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(resp_bytes)))
+                self.end_headers()
+                self.wfile.write(resp_bytes)
+            except Exception as e:
+                err_resp = json.dumps({'error': f'File extraction failed: {str(e)}'}).encode('utf-8')
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(err_resp)))
+                self.end_headers()
+                self.wfile.write(err_resp)
             return
 
         self.send_error(404, "Unknown API endpoint")

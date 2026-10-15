@@ -90,10 +90,10 @@ fileInput.addEventListener('change', async (e) => {
       }
       showToast(`Loaded ${file.name} successfully`);
     } else if (data.error) {
-      alert(`Error reading file: ${data.error}`);
+      showToast(`⚠️ ${data.error}`);
     }
   } catch (err) {
-    alert(`File upload failed: ${err.message}`);
+    showToast(`⚠️ File upload failed: ${err.message}`);
   }
 });
 
@@ -169,7 +169,7 @@ function renderMetrics() {
   burstDesc.textContent = burst.is_monotonous ? '⚠️ Flat AI Cadence (Low Variation)' : '✅ Natural Human Pacing';
 
   // Entropy & Passive Ratio
-  const ent = burst.shannon_entropy !== undefined ? burst.shannon_entropy : 0;
+  const ent = (burst.entropy !== undefined) ? burst.entropy : ((burst.shannon_entropy !== undefined) ? burst.shannon_entropy : 0);
   entropyValue.textContent = `${ent} bits`;
   const pass = burst.passive_ratio !== undefined ? burst.passive_ratio : 0;
   passiveDesc.textContent = `${pass}% Passive Voice`;

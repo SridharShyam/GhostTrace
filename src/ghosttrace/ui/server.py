@@ -175,17 +175,39 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
 
         self.send_error(404, "Unknown API endpoint")
 
-def run_server(port=7860, open_browser=True):
-    """Starts local GhostTrace Web UI server."""
+def get_local_ip():
+    """Detects primary local network IP address for LAN access."""
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Doesn't have to be reachable; just selects outbound interface
+        s.connect(('10.255.255.255', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
+
+def run_server(port=7860, host="127.0.0.1", open_browser=True):
+    """Starts local or shared LAN GhostTrace Web UI server."""
     handler = GhostTraceHandler
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        url = f"http://localhost:{port}"
+    with socketserver.TCPServer((host, port), handler) as httpd:
+        local_url = f"http://localhost:{port}"
+        lan_ip = get_local_ip()
+        lan_url = f"http://{lan_ip}:{port}"
+
         print(f"\n=======================================================")
-        print(f"  GhostTrace Web UI is running at: {url}")
+        print(f"  GhostTrace Zero-Trust Local & Team Hub")
+        print(f"  * Local Access:     {local_url}")
+        if host in ["0.0.0.0", ""]:
+            print(f"  * Team / LAN Access: {lan_url}  (Colleagues on same Wi-Fi/LAN)")
+        print(f"  * Privacy Status:   100% Offline (Zero Cloud Telemetry)")
         print(f"  Press Ctrl+C to stop the server")
         print(f"=======================================================\n")
+
         if open_browser:
-            webbrowser.open(url)
+            webbrowser.open(local_url)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

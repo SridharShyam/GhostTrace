@@ -49,14 +49,39 @@
     display: flex;
     flex-direction: column;
 
-    .brand-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(90deg, #ffffff, #c7d2fe);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+
+      .brand-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(90deg, #ffffff, #c7d2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .privacy-badge {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        border-radius: 9999px;
+        padding: 2px 8px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+
+        .badge-lock {
+          font-size: 12px;
+          width: 12px;
+          height: 12px;
+        }
+      }
     }
 
     .brand-tag {

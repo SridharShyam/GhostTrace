@@ -833,10 +833,18 @@ def main():
     if args and args[0] in ['ui', 'web', 'gui']:
         from ghosttrace.ui.server import run_server
         port = 7860
-        for a in args:
+        host = "127.0.0.1"
+        open_browser = True
+        for a in args[1:]:
             if a.startswith('--port='):
                 port = int(a.split('=', 1)[1])
-        run_server(port=port)
+            elif a.startswith('--host='):
+                host = a.split('=', 1)[1]
+            elif a == '--shared' or a == '--team' or a == '--lan':
+                host = "0.0.0.0"
+            elif a == '--no-open':
+                open_browser = False
+        run_server(port=port, host=host, open_browser=open_browser)
         return
 
     if not args:
@@ -845,7 +853,7 @@ def main():
 Usage:
   ghosttrace [file] [options]
   ghosttrace --text "copy to check" [options]
-  ghosttrace ui [--port=7860]
+  ghosttrace ui [--port=7860] [--host=127.0.0.1|0.0.0.0] [--shared] [--no-open]
   ghosttrace cleanse [file] [options]
 
 Modes:

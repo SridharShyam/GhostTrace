@@ -102,12 +102,12 @@ async function runAudit() {
   if (!currentRawText.trim()) {
     heatmap.innerHTML = '';
     reviewQueue.innerHTML = `
-      <div class="empty-review-state">
-        <div class="empty-review-icon">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+      <div class="text-center py-12 px-4 flex flex-col items-center justify-center text-slate-500">
+        <div class="w-12 h-12 rounded-full bg-blue-50 text-[#1c4980] flex items-center justify-center mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
         </div>
-        <div class="empty-review-title">Start Writing or Upload Document</div>
-        <div class="empty-review-desc">Paste content or drag in any academic paper, essay, or thesis to begin slop audit.</div>
+        <div class="font-bold text-sm text-slate-800 mb-1">Start Writing or Upload Document</div>
+        <div class="text-xs text-slate-400 max-w-[280px] leading-relaxed">Paste content or upload any research paper, essay, or thesis to begin slop audit.</div>
       </div>`;
     resetMetrics();
     return;
@@ -268,24 +268,25 @@ function renderReviewQueue() {
   if (entries.length === 0) {
     if (totalWm > 0) {
       reviewQueue.innerHTML = `
-        <div class="empty-review-state">
-          <div class="empty-review-icon warn">
-            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <div class="text-center py-10 px-4 flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
           </div>
-          <div class="empty-review-title">${totalWm} Invisible Watermarks Detected</div>
-          <div class="empty-review-desc">No generic vocabulary tells found, but <strong>${totalWm} hidden zero-width unicode characters</strong> were flagged in this text.</div>
-          <button class="btn-purge-empty" onclick="purgeWatermarksDirect()">
+          <div class="font-bold text-sm text-slate-800 mb-1">${totalWm} Invisible Watermarks Detected</div>
+          <div class="text-xs text-slate-500 max-w-[280px] leading-relaxed mb-4">No cliché buzzwords found, but <strong>${totalWm} hidden zero-width unicode characters</strong> were flagged in this text.</div>
+          <button class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1.5" onclick="purgeWatermarksDirect()">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             Purge All ${totalWm} Watermarks Now
           </button>
         </div>`;
     } else {
       reviewQueue.innerHTML = `
-        <div class="empty-review-state">
-          <div class="empty-review-icon">
-            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+        <div class="text-center py-10 px-4 flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
           </div>
-          <div class="empty-review-title">Writing is Clean</div>
-          <div class="empty-review-desc">No active AI vocabulary tells or steganographic watermarks detected in your current text.</div>
+          <div class="font-bold text-sm text-slate-800 mb-1">Writing is Clean</div>
+          <div class="text-xs text-slate-400 max-w-[280px] leading-relaxed">No active AI vocabulary tells or steganographic watermarks detected in your current text.</div>
         </div>`;
     }
     return;

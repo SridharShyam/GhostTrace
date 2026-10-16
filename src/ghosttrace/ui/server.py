@@ -37,36 +37,7 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        # If Angular build exists, serve the modern Angular Material single-page application
-        if os.path.isdir(ANGULAR_DIST):
-            clean_path = path.lstrip('/')
-            file_path = os.path.join(ANGULAR_DIST, clean_path)
-
-            if not clean_path or not os.path.exists(file_path) or os.path.isdir(file_path):
-                file_path = os.path.join(ANGULAR_DIST, 'index.html')
-
-            if os.path.exists(file_path):
-                content_type = 'text/html; charset=utf-8'
-                if file_path.endswith('.js'):
-                    content_type = 'application/javascript'
-                elif file_path.endswith('.css'):
-                    content_type = 'text/css'
-                elif file_path.endswith('.ico'):
-                    content_type = 'image/x-icon'
-                elif file_path.endswith('.json'):
-                    content_type = 'application/json'
-
-                with open(file_path, 'rb') as f:
-                    content = f.read()
-
-                self.send_response(200)
-                self.send_header('Content-Type', content_type)
-                self.send_header('Content-Length', str(len(content)))
-                self.end_headers()
-                self.wfile.write(content)
-                return
-
-        # Fallback to standalone static templates if Angular is not built
+        # Serve clean Unstop Light Theme HTML & Static Assets directly
         if path in ['/', '/index.html']:
             index_file = os.path.join(TEMPLATES_DIR, 'index.html')
             with open(index_file, 'rb') as f:

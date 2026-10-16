@@ -1,20 +1,22 @@
 Metadata-Version: 2.4
 Name: ghosttrace
-Version: 1.0.0
-Summary: Deterministic AI trace and slop detection engine with academic IEEE support, LaTeX parsing, burstiness metrics, and human replacement guidance.
+Version: 2.1.0
+Summary: Production-grade AI slop detector, steganographic watermark remover, sentence rhythm profiler, and multi-genre humanizer.
 Author-email: SHYAM S <144871368+SridharShyam@users.noreply.github.com>
-License: MIT
+License-Expression: MIT
 Project-URL: Homepage, https://github.com/SridharShyam/GhostTrace
 Project-URL: Bug Tracker, https://github.com/SridharShyam/GhostTrace/issues
-Keywords: ai-detector,anti-slop,academic-writing,latex,ieee,burstiness,humanizer
+Keywords: ai-detector,anti-slop,watermark-remover,academic-writing,latex,ieee,burstiness,humanizer
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Topic :: Text Processing :: Linguistic
 Classifier: Topic :: Scientific/Engineering :: Information Analysis
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Provides-Extra: documents
+Requires-Dist: python-docx>=0.8.11; extra == "documents"
+Requires-Dist: pypdf>=3.0.0; extra == "documents"
 Dynamic: license-file
 
 # GhostTrace
@@ -66,19 +68,22 @@ python ghosttrace.py --text "In this paper, we delve into a revolutionary approa
 ### Usage Examples
 
 ```bash
-# 1. Audit a short draft with replacement suggestions
+# 1. Launch the interactive browser Web UI with live heatmap and confirmation editor
+ghosttrace ui
+
+# 2. Audit a short draft with replacement suggestions
 ghosttrace --text "In this paper, we delve into a revolutionary approach that provides seamless optimization." --suggest
 
-# 2. Audit an IEEE LaTeX paper and generate a visual heatmap report
+# 3. Audit an IEEE LaTeX paper and generate a visual heatmap report
 ghosttrace examples/sample_ieee.tex --mode=academic --report --suggest
 
-# 3. View unified diff of humanized substitutions and export cleaned copy
+# 4. View unified diff of humanized substitutions and export cleaned copy
 ghosttrace examples/sample_ieee.tex --diff --clean=cleaned_paper.tex
 
-# 4. Run cross-model AI cleanser pass using a local or rival CLI model
+# 5. Run cross-model AI cleanser pass using a local or rival CLI model
 ghosttrace cleanse examples/sample_ieee.tex --model-cli="ollama run llama3" -o paper_cleansed.tex
 
-# 5. Print copy-paste editorial prompt for ChatGPT/Claude web chat
+# 6. Print copy-paste editorial prompt for ChatGPT/Claude web chat
 ghosttrace cleanse examples/sample_ieee.tex --print-prompt
 ```
 
@@ -145,8 +150,17 @@ Generates an interactive, standalone `report.html` highlighting flagged vocabula
 GhostTrace/
 ├── src/
 │   └── ghosttrace/
-│       ├── __init__.py         # Package exports
-│       └── engine.py           # Core detection, parser, and scoring engine
+│       ├── __init__.py         # Package exports & public API
+│       ├── engine.py           # Core detection, steganography parser & scoring engine
+│       ├── cleanse.py          # Cross-platform second-pass AI-to-AI humanizer
+│       └── ui/
+│           ├── server.py       # Standard library HTTP backend server & REST API
+│           ├── extractor.py    # Universal document reader (.docx, .pdf, .tex, .md, .txt)
+│           ├── templates/
+│           │   └── index.html  # Live heatmap editor & confirmation frontend
+│           └── static/
+│               ├── app.js      # Interactive live typing sync & client logic
+│               └── style.css   # Dark-mode glassmorphism design system
 ├── tests/
 │   └── test_ghosttrace.py      # Unit test suite
 ├── benchmarks/
@@ -154,8 +168,10 @@ GhostTrace/
 │   └── stress_test.py          # Adversarial edge-case audit
 ├── examples/
 │   ├── sample_ieee.tex         # Sample IEEE LaTeX paper with math & citations
-│   └── cleaned.txt             # Exported humanized sample output
-├── ghosttrace.py               # Root CLI executable wrapper
+│   ├── cleaned.txt             # Exported humanized sample output
+│   └── report.html             # Pre-generated sample visual heatmap report
+├── ghosttrace.py               # Root CLI executable launcher
+├── pyproject.toml              # Packaging configuration for pip install
 ├── SKILL.md                    # Agent integration specification
 ├── README.md                   # Project documentation
 └── LICENSE                     # MIT License (dual copyright attribution)

@@ -40,16 +40,21 @@ def extract_text_from_file(filename, file_bytes):
     if ext == '.zip':
         try:
             import zipfile
-            z = zipfile.ZipFile(io.BytesIO(file_bytes))
+            MAX_ZIP_MEMBER_SIZE = 10 * 1024 * 1024  # 10 MB per text file
             combined_texts = []
-            # Priority: .tex files first, then .md, then .txt
-            sorted_names = sorted(z.namelist(), key=lambda n: (not n.endswith('.tex'), not n.endswith('.md'), not n.endswith('.txt'), n))
-            for name in sorted_names:
-                if name.startswith('__MACOSX') or name.endswith('/'):
-                    continue
-                if name.endswith(('.tex', '.md', '.txt')):
-                    data = z.read(name).decode('utf-8', errors='replace')
-                    combined_texts.append(f"% === File: {name} ===\n{data}")
+            with io.BytesIO(file_bytes) as buf, zipfile.ZipFile(buf) as z:
+                # Priority: .tex files first, then .md, then .txt
+                sorted_names = sorted(z.namelist(), key=lambda n: (not n.endswith('.tex'), not n.endswith('.md'), not n.endswith('.txt'), n))
+                for name in sorted_names:
+                    if name.startswith('__MACOSX') or name.endswith('/'):
+                        continue
+                    if name.endswith(('.tex', '.md', '.txt')):
+                        info = z.getinfo(name)
+                        if info.file_size > MAX_ZIP_MEMBER_SIZE:
+                            combined_texts.append(f"% === File: {name} (Skipped: exceeds 10MB safety limit) ===")
+                            continue
+                        data = z.read(name).decode('utf-8', errors='replace')
+                        combined_texts.append(f"% === File: {name} ===\n{data}")
             if combined_texts:
                 return "\n\n".join(combined_texts)
             return "[No readable .tex, .md, or .txt files found in ZIP archive]"

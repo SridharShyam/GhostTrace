@@ -26,9 +26,8 @@ UI_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(UI_DIR, "static")
 TEMPLATES_DIR = os.path.join(UI_DIR, "templates")
 
-# Angular Material dist build location
-REPO_ROOT = os.path.abspath(os.path.join(UI_DIR, "..", "..", ".."))
-ANGULAR_DIST = os.path.join(REPO_ROOT, "frontend", "dist", "frontend", "browser")
+# Maximum upload and audit payload ceiling (25 MB) to prevent OOM/DoS
+MAX_PAYLOAD_SIZE = 25 * 1024 * 1024
 
 class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
     """Custom HTTP handler serving UI templates and REST API endpoints."""
@@ -73,6 +72,15 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/audit':
             try:
                 length = int(self.headers.get('Content-Length', 0))
+                if length > MAX_PAYLOAD_SIZE:
+                    err_resp = json.dumps({'error': 'Payload exceeds maximum limit of 25MB.'}).encode('utf-8')
+                    self.send_response(413)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err_resp)))
+                    self.end_headers()
+                    self.wfile.write(err_resp)
+                    return
+
                 body = self.rfile.read(length).decode('utf-8', errors='replace')
                 data = json.loads(body) if body.strip() else {}
                 raw_text = data.get('text', '')
@@ -128,6 +136,15 @@ class GhostTraceHandler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 length = int(self.headers.get('Content-Length', 0))
+                if length > MAX_PAYLOAD_SIZE:
+                    err_resp = json.dumps({'error': 'File upload exceeds maximum limit of 25MB.'}).encode('utf-8')
+                    self.send_response(413)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(err_resp)))
+                    self.end_headers()
+                    self.wfile.write(err_resp)
+                    return
+
                 raw_body = self.rfile.read(length)
 
                 # Construct email message for clean multipart parsing
@@ -185,10 +202,15 @@ def get_local_ip():
         s.close()
     return ip
 
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Multi-threaded TCP server to handle simultaneous LAN and browser requests without blocking."""
+    daemon_threads = True
+    allow_reuse_address = True
+
 def run_server(port=7860, host="127.0.0.1", open_browser=True):
     """Starts local or shared LAN GhostTrace Web UI server."""
     handler = GhostTraceHandler
-    with socketserver.TCPServer((host, port), handler) as httpd:
+    with ThreadedTCPServer((host, port), handler) as httpd:
         local_url = f"http://localhost:{port}"
         lan_ip = get_local_ip()
         lan_url = f"http://{lan_ip}:{port}"

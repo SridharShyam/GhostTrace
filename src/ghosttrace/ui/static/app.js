@@ -310,10 +310,10 @@ function renderReviewQueue() {
           <span class="tag-badge">AI Buzzword</span>
         </div>
         <div class="sub-row">
-          <span class="sub-old">${origWord}</span>
+          <span class="sub-old">${escapeHtml(origWord)}</span>
           <span class="sub-arrow">➔</span>
           <select class="sub-select" id="select-${idx}">
-            ${alternatives.map(alt => `<option value="${alt}" ${alt === chosen ? 'selected' : ''}>${alt}</option>`).join('')}
+            ${alternatives.map(alt => `<option value="${escapeHtml(alt)}" ${alt === chosen ? 'selected' : ''}>${escapeHtml(alt)}</option>`).join('')}
           </select>
         </div>
       </div>

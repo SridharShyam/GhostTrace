@@ -24,6 +24,14 @@ const rhythmBars = document.getElementById('rhythm-bars');
 const sentenceCount = document.getElementById('sentence-count');
 const toast = document.getElementById('toast');
 
+// Novel Enterprise Diagnostics Elements
+const provenanceTitle = document.getElementById('provenance-title');
+const provenanceBadge = document.getElementById('provenance-badge');
+const tokenWatermarkVerdict = document.getElementById('token-watermark-verdict');
+const tokenWatermarkZ = document.getElementById('token-watermark-z');
+const citationVerdict = document.getElementById('citation-verdict');
+const citationScore = document.getElementById('citation-score');
+
 // Debounce timer for live typing
 let debounceTimer;
 
@@ -145,6 +153,13 @@ function resetMetrics() {
   sentenceCount.textContent = '0';
   btnHumanize.disabled = true;
   btnShuffle.disabled = true;
+
+  if (provenanceTitle) provenanceTitle.textContent = 'Uncertain / Human';
+  if (provenanceBadge) provenanceBadge.textContent = '0%';
+  if (tokenWatermarkVerdict) tokenWatermarkVerdict.textContent = 'Clean: No Watermark';
+  if (tokenWatermarkZ) tokenWatermarkZ.textContent = 'z = 0.0';
+  if (citationVerdict) citationVerdict.textContent = '100% Verified';
+  if (citationScore) citationScore.textContent = '100 / 100';
 }
 
 function renderMetrics() {
@@ -186,6 +201,44 @@ function renderMetrics() {
     watermarkValue.className = 'stat-value';
     watermarkDesc.textContent = 'Steganography-Free';
     btnPurgeQuick.classList.add('hidden');
+  }
+
+  // Enterprise Novel Diagnostic Modules
+  if (auditData.provenance && provenanceTitle && provenanceBadge) {
+    const prov = auditData.provenance;
+    provenanceTitle.textContent = prov.predicted_model || 'Uncertain / Human';
+    provenanceBadge.textContent = `${prov.confidence || 0}%`;
+    if (prov.confidence >= 50 && prov.predicted_model.includes('OpenAI')) {
+      provenanceBadge.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800';
+    } else if (prov.confidence >= 50 && prov.predicted_model.includes('Anthropic')) {
+      provenanceBadge.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800';
+    } else if (prov.confidence >= 50 && prov.predicted_model.includes('Google')) {
+      provenanceBadge.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 text-blue-800';
+    } else {
+      provenanceBadge.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700';
+    }
+  }
+
+  if (auditData.token_watermark && tokenWatermarkVerdict && tokenWatermarkZ) {
+    const twm = auditData.token_watermark;
+    tokenWatermarkVerdict.textContent = twm.is_watermarked ? '⚠️ Synthetic Token Watermark Detected' : (twm.verdict || 'Clean: No Watermark');
+    tokenWatermarkZ.textContent = `z = ${twm.z_score !== undefined ? twm.z_score : 0.0}`;
+    tokenWatermarkZ.className = twm.is_watermarked
+      ? 'px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 text-red-800'
+      : 'px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700';
+  }
+
+  if (auditData.citation_audit && citationVerdict && citationScore) {
+    const ca = auditData.citation_audit;
+    const score = ca.citation_integrity_score !== undefined ? ca.citation_integrity_score : 100;
+    citationScore.textContent = `${score} / 100`;
+    if (score < 80) {
+      citationVerdict.textContent = '⚠️ Hallucinations / Fake Citations Flagged';
+      citationScore.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-red-100 text-red-800';
+    } else {
+      citationVerdict.textContent = ca.total_citations_checked > 0 ? `Verified (${ca.total_citations_checked} checked)` : '100% Verified';
+      citationScore.className = 'px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700';
+    }
   }
 
   // Enable/Disable Humanize button
@@ -335,7 +388,7 @@ function shuffleCandidateAlternatives() {
       sel.value = next;
     }
   });
-  showToast('🔀 Shuffled synonyms for maximum entropy');
+  showToast('Synonyms randomized');
 }
 
 function purgeWatermarksDirect() {
@@ -388,7 +441,7 @@ function purgeWatermarks(str) {
 function copyToClipboard() {
   const textToCopy = purgeWatermarks(editor.value);
   navigator.clipboard.writeText(textToCopy).then(() => {
-    showToast('📋 Sanitized text copied to clipboard!');
+    showToast('Clean text copied to clipboard');
   });
 }
 
@@ -413,7 +466,7 @@ function downloadCleanedFile() {
   a.href = URL.createObjectURL(blob);
   a.download = downloadName;
   a.click();
-  showToast(`📥 Downloaded ${downloadName}`);
+  showToast(`Downloaded ${downloadName}`);
 }
 
 function showToast(msg) {

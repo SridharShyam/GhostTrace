@@ -11,6 +11,11 @@ from ghosttrace.engine import (
     sanitize_watermarks,
     get_suggestions,
     generate_heatmap_html,
+    detect_synthetic_token_watermark,
+    detect_model_provenance,
+    audit_citations,
+    detect_translation_artifacts,
+    profile_ngrams_and_perplexity,
     main,
 )
 
@@ -26,5 +31,10 @@ __all__ = [
     "sanitize_watermarks",
     "get_suggestions",
     "generate_heatmap_html",
+    "detect_synthetic_token_watermark",
+    "detect_model_provenance",
+    "audit_citations",
+    "detect_translation_artifacts",
+    "profile_ngrams_and_perplexity",
     "main",
 ]

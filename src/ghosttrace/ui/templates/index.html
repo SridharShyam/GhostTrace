@@ -167,6 +167,51 @@
 
     </section>
 
+    <!-- Enterprise Intelligence Subsystems Bar -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <!-- 1. Model Provenance Fingerprint -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#1c4980] flex items-center justify-center font-bold text-xs">
+            AI
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Model Provenance</div>
+            <div id="provenance-title" class="text-xs font-bold text-slate-800">Uncertain / Human</div>
+          </div>
+        </div>
+        <span id="provenance-badge" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">0%</span>
+      </div>
+
+      <!-- 2. Synthetic Token Watermark (Kirchenbauer z-score) -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs">
+            Z
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Token Watermark (Z-Score)</div>
+            <div id="token-watermark-verdict" class="text-xs font-bold text-slate-800">Clean: No Watermark</div>
+          </div>
+        </div>
+        <span id="token-watermark-z" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700">z = 0.0</span>
+      </div>
+
+      <!-- 3. Citation & Integrity Auditor -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs">
+            DOI
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Citation Integrity</div>
+            <div id="citation-verdict" class="text-xs font-bold text-slate-800">100% Verified</div>
+          </div>
+        </div>
+        <span id="citation-score" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700">100 / 100</span>
+      </div>
+    </section>
+
     <!-- Sentence Length Rhythm Profile Strip -->
     <section class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm" id="rhythm-section">
       <div class="flex items-center justify-between mb-3">

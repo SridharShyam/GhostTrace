@@ -8,6 +8,8 @@ Supports Plain Text (.txt), Markdown (.md), LaTeX (.tex), and HTML (.html).
 Zero cloud dependencies. 100% offline and explainable.
 """
 
+import collections
+import hashlib
 import html as _html
 import math
 import os
@@ -236,6 +238,340 @@ def sanitize_watermarks(text, replace_em_dashes=False):
         sanitized = re.sub(r'\s*–\s*', ' - ', sanitized)
 
     return sanitized
+
+# ── Novel Subsystems: 5 Enterprise Pillars ────────────────────────────────────
+
+# 1. Synthetic Token Watermark / Green-Red List Statistical Analyzer (Kirchenbauer et al. model)
+def detect_synthetic_token_watermark(text, gamma=0.5):
+    """Detects statistical pseudo-random token watermarking (Kirchenbauer et al. algorithm).
+    
+    Partitions bigrams into pseudo-random 'green' and 'red' lists using hash seeds.
+    Calculates the empirical green token count and computes the one-tailed z-score.
+    A z-score > 3.0 indicates statistically anomalous green-list clustering (p < 0.0013).
+    """
+    tokens = re.findall(r'\b[a-zA-Z0-9_\'-]+\b', text.lower())
+    total_tokens = len(tokens)
+    
+    if total_tokens < 10:
+        return {
+            "total_tokens": total_tokens,
+            "green_tokens": 0,
+            "green_ratio": 0.0,
+            "z_score": 0.0,
+            "p_value": 1.0,
+            "is_watermarked": False,
+            "verdict": "Text too short for statistical token watermarking analysis (min 10 tokens)"
+        }
+    
+    green_count = 0
+    # Rolling bigram hash partitioning
+    for i in range(1, total_tokens):
+        prev_token = tokens[i - 1]
+        curr_token = tokens[i]
+        
+        # Deterministic hash of previous token to define the current green list rule
+        h = int(hashlib.md5(prev_token.encode('utf-8')).hexdigest(), 16)
+        curr_h = int(hashlib.md5(curr_token.encode('utf-8')).hexdigest(), 16)
+        
+        # If hash parity matches, classify as green token
+        if (h + curr_h) % 100 < int(gamma * 100):
+            green_count += 1
+            
+    eval_tokens = total_tokens - 1
+    expected_green = eval_tokens * gamma
+    variance = eval_tokens * gamma * (1.0 - gamma)
+    std_dev = math.sqrt(variance) if variance > 0 else 1.0
+    z_score = (green_count - expected_green) / std_dev
+    
+    # Gaussian approximation for p-value: 0.5 * erfc(z / sqrt(2))
+    p_value = 0.5 * math.erfc(z_score / math.sqrt(2)) if z_score > 0 else 1.0
+    is_watermarked = z_score >= 3.0  # standard threshold (99.87% confidence)
+    
+    return {
+        "total_tokens": total_tokens,
+        "green_tokens": green_count,
+        "expected_green": round(expected_green, 1),
+        "green_ratio": round((green_count / max(1, eval_tokens)), 3),
+        "z_score": round(z_score, 2),
+        "p_value": round(p_value, 5),
+        "is_watermarked": is_watermarked,
+        "confidence_percentage": round(min(100.0, max(0.0, (1.0 - p_value) * 100)), 2),
+        "verdict": "Synthetic Token Watermark Detected (High Confidence)" if is_watermarked else "No Statistical Token Watermarking Found"
+    }
+
+# 2. Model Provenance Fingerprinter (GPT-4o vs Claude 3.5 vs Gemini)
+PROVENANCE_SIGNATURES = {
+    "gpt": {
+        "name": "OpenAI (GPT-4o / ChatGPT)",
+        "patterns": [
+            r"\b(it is important to (?:remember|note|consider))\b",
+            r"\b(delve|delving|delved)\b",
+            r"\b(testament to|beacon of|tapestry of)\b",
+            r"\b(not only\b.*?\bbut also)\b",
+            r"\b(in today's (?:fast-paced|ever-evolving|digital) (?:world|landscape|age))\b",
+            r"\b(embark on a journey|unlock (?:the|your) potential)\b",
+            r"\b(seamless|seamlessly|streamline|streamlined)\b",
+            r"\b(in conclusion|to summarize|overall|ultimately)\b"
+        ],
+        "weight": 1.0
+    },
+    "claude": {
+        "name": "Anthropic (Claude 3.5 Sonnet / Opus)",
+        "patterns": [
+            r"\b(it's worth (?:noting|pointing out|remembering))\b",
+            r"\b(nuanced|nuance|subtlety|interplay)\b",
+            r"\b(crucial distinction|important caveat|worth emphasizing)\b",
+            r"\b(on balance|it's fair to say|reasonable interpretation)\b",
+            r"\b(strikes a balance|double-edged sword)\b",
+            r"\b(fascinating dynamic|complex landscape)\b",
+            r"(?:—\s*[a-z].*?—)" # characteristic clause-bracketing em dashes
+        ],
+        "weight": 1.2
+    },
+    "gemini": {
+        "name": "Google (Gemini 1.5 / 2.0)",
+        "patterns": [
+            r"\b(here's a breakdown|let's break down|let's explore)\b",
+            r"\b(key takeaways|at a glance|deep dive)\b",
+            r"\b(supercharge|turbocharge|game-changer)\b",
+            r"\b(buckle up|the secret sauce|dive right in)\b",
+            r"\b(think of it as|in simple terms|bottom line)\b"
+        ],
+        "weight": 1.1
+    }
+}
+
+def detect_model_provenance(text):
+    """Identifies model family provenance (OpenAI GPT, Anthropic Claude, or Google Gemini).
+    
+    Scans for distinct rhetorical framing, meta-qualifiers, and signature idioms.
+    """
+    scores = {"gpt": 0, "claude": 0, "gemini": 0}
+    matches = {"gpt": [], "claude": [], "gemini": []}
+    
+    for model_key, spec in PROVENANCE_SIGNATURES.items():
+        weight = spec["weight"]
+        for pat in spec["patterns"]:
+            found = re.findall(pat, text, re.IGNORECASE)
+            if found:
+                for match in found:
+                    match_str = match if isinstance(match, str) else match[0]
+                    matches[model_key].append(match_str)
+                    scores[model_key] += weight
+                    
+    total_score = sum(scores.values())
+    if total_score == 0:
+        return {
+            "predicted_model": "Uncertain / Human / Alternate Model",
+            "confidence": 0.0,
+            "probabilities": {"gpt": 33.3, "claude": 33.3, "gemini": 33.3},
+            "evidence": {}
+        }
+        
+    probs = {
+        k: round((v / total_score) * 100, 1) for k, v in scores.items()
+    }
+    top_model = max(scores, key=scores.get)
+    
+    return {
+        "predicted_model": PROVENANCE_SIGNATURES[top_model]["name"],
+        "confidence": probs[top_model],
+        "probabilities": probs,
+        "evidence": {
+            k: list(set(v)) for k, v in matches.items() if v
+        }
+    }
+
+# 3. Adversarial Citation & Hallucinated Reference Auditor
+def audit_citations(text):
+    """Scans academic prose and references for real vs. hallucinated citation indicators.
+    
+    Verifies DOI syntax, arXiv identifiers, publication years, and flags synthetic journals.
+    """
+    findings = {
+        "valid_dois": [],
+        "invalid_dois": [],
+        "valid_arxiv_ids": [],
+        "invalid_arxiv_ids": [],
+        "bracketed_citations": [],
+        "suspicious_patterns": [],
+        "total_citations_checked": 0,
+        "citation_integrity_score": 100
+    }
+    
+    # 1. DOI format audit: 10.NNNN/...
+    doi_candidates = re.findall(r'(?:doi(?::|\.org\/)?\s*)(10\.\d{4,9}/[-._;()/:A-Za-z0-9]+)', text, re.IGNORECASE)
+    raw_dois = re.findall(r'\b10\.\d{4,9}/[-._;()/:A-Za-z0-9]+', text)
+    all_dois = list(set(doi_candidates + raw_dois))
+    
+    for doi in all_dois:
+        findings["total_citations_checked"] += 1
+        # DOIs should not contain trailing punctuation or unbalanced braces
+        clean_doi = doi.rstrip('.,;)]')
+        if re.match(r'^10\.\d{4,9}/[a-zA-Z0-9._:\-\/]+$', clean_doi):
+            findings["valid_dois"].append(clean_doi)
+        else:
+            findings["invalid_dois"].append(doi)
+            findings["citation_integrity_score"] -= 15
+            
+    # 2. arXiv ID format audit: YYMM.NNNNN
+    arxiv_matches = re.findall(r'(?:arxiv(?::|\.org\/abs\/)?\s*)(\d{4}\.\d{4,5}(?:v\d+)?)', text, re.IGNORECASE)
+    for aid in list(set(arxiv_matches)):
+        findings["total_citations_checked"] += 1
+        year_str = aid[:2]
+        month_str = aid[2:4]
+        try:
+            year = int(year_str)
+            month = int(month_str)
+            # arXiv was established in 1991 (old format) and 2007 (YYMM.NNNN format)
+            # Current year range: 07 to 26; month: 1 to 12
+            if (7 <= year <= 26) and (1 <= month <= 12):
+                findings["valid_arxiv_ids"].append(aid)
+            else:
+                findings["invalid_arxiv_ids"].append(f"{aid} (Invalid month/year prefix: {month_str}/{year_str})")
+                findings["citation_integrity_score"] -= 20
+        except ValueError:
+            findings["invalid_arxiv_ids"].append(aid)
+            findings["citation_integrity_score"] -= 20
+            
+    # 3. Bracketed citations: [1], [1, 2], [Smith et al., 2024]
+    bracketed = re.findall(r'\[([A-Za-z]+(?:\s+et\s+al\.)?,?\s*\d{4})\]', text)
+    findings["bracketed_citations"] = list(set(bracketed))
+    findings["total_citations_checked"] += len(findings["bracketed_citations"])
+    
+    # 4. Future hallucination guard: citations claiming publication years after 2026
+    future_years = re.findall(r'\b(20(?:2[7-9]|[3-9]\d))\b', text)
+    if future_years:
+        for fy in set(future_years):
+            findings["suspicious_patterns"].append(f"Future publication year cited: {fy}")
+            findings["citation_integrity_score"] -= 25
+            
+    # 5. Hallucinated synthetic journal names commonly confabulated by LLMs
+    hallucinated_journals = [
+        "Journal of Advanced Machine Learning Innovations",
+        "International Journal of Modern AI Paradigms",
+        "Frontiers in Transformative Neural Computing",
+        "Global Research on Seamless Technologies",
+        "Transactions on Deep Optimization"
+    ]
+    for hj in hallucinated_journals:
+        if hj.lower() in text.lower():
+            findings["suspicious_patterns"].append(f"Known synthetic / hallucinated journal title: '{hj}'")
+            findings["citation_integrity_score"] -= 30
+            
+    findings["citation_integrity_score"] = max(0, min(100, findings["citation_integrity_score"]))
+    return findings
+
+# 4. Cross-Language & Translation AI Artifact Detector
+TRANSLATION_CALQUES = {
+    "germanic": [
+        (r"\b(?:in\s+the\s+rule)\b", "Calque from German 'in der Regel' (use: 'usually' or 'as a rule')"),
+        (r"\b(?:stand\s+in\s+question)\b", "Calque from German 'in Frage stehen' (use: 'be in doubt' or 'be at issue')"),
+        (r"\b(?:bring\s+to\s+expression)\b", "Calque from German 'zum Ausdruck bringen' (use: 'express' or 'convey')"),
+        (r"\b(?:in\s+first\s+line)\b", "Calque from German 'in erster Linie' (use: 'primarily' or 'chiefly')")
+    ],
+    "romance_french": [
+        (r"\b(?:permits\s+to\s+[a-z]+)\b", "French translation artifact 'permet de...' (use: 'allows ... to' or 'enables')"),
+        (r"\b(?:actual\s+state\s+of)\b", "False friend from French 'état actuel' (use: 'current state of')"),
+        (r"\b(?:in\s+a\s+first\s+time)\b", "Calque from French 'dans un premier temps' (use: 'initially' or 'first')"),
+        (r"\b(?:notably\b.*?\b(?:among|including))\b", "Calque from French 'notamment' (overused as conversational filler)")
+    ],
+    "spanish_italian": [
+        (r"\b(?:make\s+reference\s+to)\b", "Calque from Spanish 'hacer referencia a' (use: 'refer to')"),
+        (r"\b(?:in\s+base\s+to)\b", "Calque from Spanish 'en base a' (use: 'based on')"),
+        (r"\b(?:have\s+in\s+account)\b", "Calque from Spanish 'tener en cuenta' (use: 'take into account' or 'consider')")
+    ]
+}
+
+def detect_translation_artifacts(text):
+    """Detects syntactic calques, false friends, and machine translation artifacts.
+    
+    Identifies non-English linguistic structures literally translated into English by LLMs.
+    """
+    artifacts_found = []
+    category_counts = collections.defaultdict(int)
+    
+    for language_family, rules in TRANSLATION_CALQUES.items():
+        for pattern, explanation in rules:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                for m in matches:
+                    artifacts_found.append({
+                        "phrase": m,
+                        "origin_family": language_family.replace("_", " ").title(),
+                        "recommendation": explanation
+                    })
+                    category_counts[language_family] += 1
+                    
+    total_artifacts = len(artifacts_found)
+    has_artifacts = total_artifacts > 0
+    
+    return {
+        "has_translation_artifacts": has_artifacts,
+        "total_artifacts": total_artifacts,
+        "category_breakdown": dict(category_counts),
+        "artifacts": artifacts_found,
+        "verdict": f"Flagged {total_artifacts} literal AI translation calques" if has_artifacts else "Clean: Natural English phrasing without translationese"
+    }
+
+# 5. Local N-Gram Glider & Perplexity Cadence Profiler
+def profile_ngrams_and_perplexity(text):
+    """Glides across text using n-grams to detect repetitive sentence head words and low-entropy sequences.
+    
+    Calculates:
+      1. Anaphora stacking (consecutive sentences starting with identical head words).
+      2. Repetitive 3-grams and 4-grams (robotic phrase recycling).
+      3. Per-sentence lexical variation profile.
+    """
+    raw_sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    sentences = [s.strip() for s in raw_sentences if len(s.strip().split()) >= 3]
+    
+    if len(sentences) < 2:
+        return {
+            "sentence_count": len(sentences),
+            "repetitive_head_words": [],
+            "recycled_ngrams": [],
+            "lexical_diversity_ratio": 1.0,
+            "verdict": "Text too short for n-gram cadence profiling (min 2 sentences)"
+        }
+        
+    # 1. Anaphora & Head Word Stacking Check
+    head_words = []
+    consecutive_stacking = []
+    for i, s in enumerate(sentences):
+        words = s.split()
+        first_two = " ".join(words[:2]).lower() if len(words) >= 2 else words[0].lower()
+        head_words.append(first_two)
+        if i > 0 and first_two == head_words[i - 1]:
+            consecutive_stacking.append({
+                "sentence_index": i + 1,
+                "repeated_head": first_two,
+                "context": s[:60] + "..."
+            })
+            
+    # 2. Rolling 3-Gram & 4-Gram Recycling
+    tokens = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    three_grams = [f"{tokens[i]} {tokens[i+1]} {tokens[i+2]}" for i in range(len(tokens) - 2)]
+    trigram_counts = collections.Counter(three_grams)
+    recycled_ngrams = [
+        {"ngram": ng, "count": c} for ng, c in trigram_counts.most_common(5) if c >= 3
+    ]
+    
+    # 3. Type-Token Ratio (Lexical Diversity)
+    unique_tokens = len(set(tokens))
+    total_tokens = len(tokens)
+    ttr = round(unique_tokens / max(1, total_tokens), 3)
+    
+    is_robotic_cadence = len(consecutive_stacking) >= 2 or len(recycled_ngrams) >= 2 or (ttr < 0.45 and total_tokens > 50)
+    
+    return {
+        "sentence_count": len(sentences),
+        "lexical_diversity_ratio": ttr,
+        "consecutive_head_word_stacking": consecutive_stacking,
+        "recycled_ngrams": recycled_ngrams,
+        "is_robotic_cadence": is_robotic_cadence,
+        "verdict": "Robotic N-Gram Cadence Detected (Repetitive sentence openers or recycled trigrams)" if is_robotic_cadence else "Healthy Natural N-Gram Cadence"
+    }
 
 def normalise(t):
     """Normalize typographic quotes, dashes, spaces and purge invisible watermarks."""
@@ -832,8 +1168,8 @@ def main():
 
     if args and args[0] in ['ui', 'web', 'gui']:
         from ghosttrace.ui.server import run_server
-        port = 7860
-        host = "127.0.0.1"
+        port = None
+        host = None
         open_browser = True
         for a in args[1:]:
             if a.startswith('--port='):

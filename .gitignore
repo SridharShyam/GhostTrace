@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
+# Distribution / packaging / builds
 .Python
 build/
 develop-eggs/
@@ -30,7 +30,7 @@ MANIFEST
 *.manifest
 *.spec
 
-# Unit test / coverage reports
+# Unit test / coverage reports / caches
 htmlcov/
 .tox/
 .nox/
@@ -45,8 +45,23 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# Environments
+# Environments, keys, and credentials (CRITICAL: Never track sensitive files)
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.id_rsa
+*.id_ed25519
+*.secret
+*.token
+*.credentials
+credentials.json
+token.json
 .venv
 env/
 venv/
@@ -54,21 +69,43 @@ ENV/
 env.bak/
 venv.bak/
 
-# Editor and IDE configurations
+# Database dumps, local databases, and sqlite
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+
+# Editor, OS, and IDE configurations
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# GhostTrace local execution artifacts
+# GhostTrace local execution outputs & result artifacts
 report.html
 cleansed.*
 ghosttrace_cleansed.*
 document.txt
 test_output.*
+output/
+results/
+logs/
+*.log
 
 # Frontend build & node caches
 frontend/dist/
 frontend/.angular/
 frontend/node_modules/
+
+# Non-root README rule (ONLY root README.md is tracked by Git)
+*/**/README.md
+*/README.md
+*/**/README*
+*/README*
+!/README.md
+

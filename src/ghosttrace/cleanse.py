@@ -86,6 +86,11 @@ def main():
     # Determine command
     cmd = args.model_cli
     if not cmd:
+        from ghosttrace.config import DEFAULT_CLEANSE_CMD
+        if DEFAULT_CLEANSE_CMD and shutil.which(DEFAULT_CLEANSE_CMD.split()[0]):
+            cmd = DEFAULT_CLEANSE_CMD
+
+    if not cmd:
         # Detect available CLIs in PATH
         for candidate in ["ollama", "claude", "gpt", "aichat"]:
             if shutil.which(candidate):

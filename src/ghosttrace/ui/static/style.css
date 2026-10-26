@@ -150,7 +150,7 @@
 
 .sub-select:focus {
   border-color: #1c4980;
-  ring: 1px solid #1c4980;
+  box-shadow: 0 0 0 1px #1c4980;
 }
 
 /* Toast Message */

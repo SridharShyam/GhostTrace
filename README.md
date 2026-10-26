@@ -112,26 +112,26 @@ Generates an interactive, standalone `report.html` highlighting flagged vocabula
 GhostTrace incorporates five specialized subsystems designed to catch modern LLM watermarks, provenance signatures, citation confabulations, and translation patterns:
 
 1. **Synthetic Token Watermark Analyzer (Kirchenbauer et al.)**:
-   - Analyzes bigram token transitions using rolling pseudorandom hash partitions.
-   - Calculates empirical green-list token ratios and evaluates the one-tailed Gaussian $Z$-score ($z \ge 3.0$ flags active statistical watermarking with $p < 0.0013$).
-   - REST API: `POST /api/features/token-watermark`
+   * Analyzes bigram token transitions using rolling pseudorandom hash partitions.
+   * Calculates empirical green-list token ratios and evaluates the one-tailed Gaussian $Z$-score ($z \ge 3.0$ flags active statistical watermarking with $p < 0.0013$).
+   * REST API: `POST /api/features/token-watermark`
 
 2. **Model Provenance Fingerprinter**:
-   - Pinpoints LLM family provenance (**OpenAI GPT-4o**, **Anthropic Claude 3.5**, or **Google Gemini 1.5/2.0**) by analyzing rhetorical framing, meta-qualifiers (*"it is important to remember"*, *"it's worth noting"*, *"here's the breakdown"*), and characteristic em-dash clause-bracketing.
-   - REST API: `POST /api/features/provenance`
+   * Pinpoints LLM family provenance (**OpenAI GPT-4o**, **Anthropic Claude 3.5**, or **Google Gemini 1.5/2.0**) by analyzing rhetorical framing, meta-qualifiers (*"it is important to remember"*, *"it's worth noting"*, *"here's the breakdown"*), and characteristic em-dash clause-bracketing.
+   * REST API: `POST /api/features/provenance`
 
 3. **Adversarial Citation & Hallucinated Reference Auditor**:
-   - Cross-audits academic bibliographies, formatted DOIs (`10.NNNN/...`), and arXiv identifiers (`YYMM.NNNNN`).
-   - Flags impossible future publication years ($> 2026$) and confabulated synthetic journal titles (*"Journal of Advanced Machine Learning Innovations"*).
-   - REST API: `POST /api/features/citations`
+   * Cross-audits academic bibliographies, formatted DOIs (`10.NNNN/...`), and arXiv identifiers (`YYMM.NNNNN`).
+   * Flags impossible future publication years ($> 2026$) and confabulated synthetic journal titles (*"Journal of Advanced Machine Learning Innovations"*).
+   * REST API: `POST /api/features/citations`
 
 4. **Cross-Language & Translation AI Artifact Detector**:
-   - Traps syntactic calques, false friends, and structural translationese injected by multilingual LLMs translating thought patterns from Germanic (*"in the rule"*, *"bring to expression"*), French (*"permits to..."*, *"in a first time"*), and Spanish/Italian (*"make reference to"*, *"in base to"*).
-   - REST API: `POST /api/features/translation-artifacts`
+   * Traps syntactic calques, false friends, and structural translationese injected by multilingual LLMs translating thought patterns from Germanic (*"in the rule"*, *"bring to expression"*), French (*"permits to..."*, *"in a first time"*), and Spanish/Italian (*"make reference to"*, *"in base to"*).
+   * REST API: `POST /api/features/translation-artifacts`
 
 5. **Local N-Gram Glider & Perplexity Cadence Profiler**:
-   - Detects robotic anaphora head-word stacking (consecutive sentences opening with identical subjects/verbs) and recycled 3-gram and 4-gram phrasal repetitions alongside Type-Token Ratio (TTR) lexical diversity profiling.
-   - REST API: `POST /api/features/ngram-profile`
+   * Detects robotic anaphora head-word stacking (consecutive sentences opening with identical subjects/verbs) and recycled 3-gram and 4-gram phrasal repetitions alongside Type-Token Ratio (TTR) lexical diversity profiling.
+   * REST API: `POST /api/features/ngram-profile`
 
 ---
 
@@ -192,22 +192,23 @@ GhostTrace/
 
 When running `ghosttrace ui`, an interactive OpenAPI/Swagger testing portal is automatically available:
 
-- **Swagger Documentation:** [http://localhost:7860/docs](http://localhost:7860/docs)
-- **OpenAPI 3.0 Specification:** [http://localhost:7860/openapi.json](http://localhost:7860/openapi.json)
+* **Swagger Documentation:** [http://localhost:7860/docs](http://localhost:7860/docs)
+* **OpenAPI 3.0 Specification:** [http://localhost:7860/openapi.json](http://localhost:7860/openapi.json)
 
 Available REST endpoints:
-- `POST /api/audit`: Full composite audit pipeline (including provenance, watermarks, and citation integrity).
-- `POST /api/burstiness`: Sentence length variance and cadence profiling.
-- `POST /api/watermarks/detect`: Scans text for zero-width steganographic markers.
-- `POST /api/watermarks/purge`: Strips invisible watermarks and returns cleaned text.
-- `POST /api/suggestions`: Returns curated human synonym recommendations.
-- `POST /api/humanize`: Replaces AI tells and returns humanized text with a diff.
-- `POST /api/upload`: Safe multi-format document extraction.
-- `POST /api/features/token-watermark`: Kirchenbauer statistical green/red list token watermark analyzer.
-- `POST /api/features/provenance`: Model family signature classifier (GPT vs Claude vs Gemini).
-- `POST /api/features/citations`: DOI, arXiv format, and hallucinated reference auditor.
-- `POST /api/features/translation-artifacts`: Syntactic calques and multilingual translationese detector.
-- `POST /api/features/ngram-profile`: Repetitive anaphora head-word stacking and N-gram perplexity glider.
+
+* `POST /api/audit`: Full composite audit pipeline (including provenance, watermarks, and citation integrity).
+* `POST /api/burstiness`: Sentence length variance and cadence profiling.
+* `POST /api/watermarks/detect`: Scans text for zero-width steganographic markers.
+* `POST /api/watermarks/purge`: Strips invisible watermarks and returns cleaned text.
+* `POST /api/suggestions`: Returns curated human synonym recommendations.
+* `POST /api/humanize`: Replaces AI tells and returns humanized text with a diff.
+* `POST /api/upload`: Safe multi-format document extraction.
+* `POST /api/features/token-watermark`: Kirchenbauer statistical green/red list token watermark analyzer.
+* `POST /api/features/provenance`: Model family signature classifier (GPT vs Claude vs Gemini).
+* `POST /api/features/citations`: DOI, arXiv format, and hallucinated reference auditor.
+* `POST /api/features/translation-artifacts`: Syntactic calques and multilingual translationese detector.
+* `POST /api/features/ngram-profile`: Repetitive anaphora head-word stacking and N-gram perplexity glider.
 
 ---
 
